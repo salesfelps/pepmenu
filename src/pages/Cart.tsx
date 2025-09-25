@@ -2,7 +2,7 @@
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
 import { useState } from 'react';
-import { ArrowLeft, Plus, Minus, Trash2, Tag } from 'lucide-react';
+import { ArrowLeft, Tag, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart, useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -130,16 +130,17 @@ export default function Cart() {
         {/* Cart Items */}
         {cart.map((item, index) => (
           <Card key={`${item.id}-${index}`} className="p-4 shadow-card">
-            <div className="flex gap-4">
-              <img 
-                src={item.image} 
-                alt={item.name}
-                className="w-16 h-16 rounded-lg object-cover"
-              />
-              
+            <div className="flex items-start gap-4">
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground">{item.name}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-2">
+                <div className="flex items-start justify-between">
+                  <h3 className="font-semibold text-foreground line-clamp-1">
+                    {item.quantity}x {item.name}
+                  </h3>
+                  <span className="text-primary font-bold ml-2 flex-shrink-0">
+                    {formatPrice(item.price * item.quantity)}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                   {item.description}
                 </p>
                 {item.observation && (
@@ -147,45 +148,28 @@ export default function Cart() {
                     Obs: {item.observation}
                   </p>
                 )}
-                <p className="text-lg font-bold text-primary mt-2">
-                  {formatPrice(item.price * item.quantity)}
-                </p>
-              </div>
-              
-              <div className="flex flex-col items-end gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeFromCart(item.id)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-                
-                <div className="flex items-center gap-2">
+                <div className="mt-3 flex items-center justify-between">
                   <Button
                     variant="outline"
-                    size="icon"
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    className="w-8 h-8"
+                    size="sm"
+                    onClick={() => navigate('/')}
                   >
-                    <Minus className="w-3 h-3" />
+                    Editar
                   </Button>
-                  
-                  <span className="text-sm font-semibold min-w-[2rem] text-center">
-                    {item.quantity}
-                  </span>
-                  
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    className="w-8 h-8"
+                  <button
+                    type="button"
+                    onClick={() => removeFromCart(item.id)}
+                    className="text-destructive text-sm font-medium hover:underline"
                   >
-                    <Plus className="w-3 h-3" />
-                  </Button>
+                    Remover
+                  </button>
                 </div>
               </div>
+              <img 
+                src={item.image} 
+                alt={item.name}
+                className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+              />
             </div>
           </Card>
         ))}
