@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { formatPrice } from '@/lib/utils';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 
 export default function Delivery() {
@@ -33,8 +34,8 @@ export default function Delivery() {
   const [number, setNumber] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [complement, setComplement] = useState('');
-  const [city, setCity] = useState('');
-  const [stateUF, setStateUF] = useState('');
+  const [city, setCity] = useState('Embu das Artes');
+  const [stateUF, setStateUF] = useState('SP');
   const [reference, setReference] = useState('');
 
   const { total } = getCartTotal();
@@ -135,7 +136,8 @@ export default function Delivery() {
       setStreet(data.logradouro || '');
       setNeighborhood(data.bairro || '');
       setCity(data.localidade || '');
-      setStateUF((data.uf || '').toUpperCase());
+      // Estado fixo em SP conforme requisito atual
+      setStateUF('SP');
       setShowAddressFields(true);
     } catch (e) {
       setShowAddressFields(false);
@@ -283,12 +285,12 @@ export default function Delivery() {
 
               {showAddressFields && (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="relative sm:col-span-2">
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="relative col-span-3">
                       <Input id="street" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rua *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
                       <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Rua</span>
                     </div>
-                    <div className="relative">
+                    <div className="relative col-span-1">
                       <Input id="number" value={number} onChange={(e) => setNumber(e.target.value)} placeholder="Nº *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
                       <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Nº</span>
                     </div>
@@ -302,7 +304,7 @@ export default function Delivery() {
                     <div className="relative">
                       <Input id="complement" value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Complemento" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
                       <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Complemento</span>
-                      <p className="text-xs text-muted-foreground mt-1">Ex.: Apto/Bloco/Casa</p>
+                      <p className="text-xs text-muted-foreground mt-1">Exemplo: Apto/Bloco/Casa</p>
                     </div>
                     <div className="relative">
                       <Input id="reference" value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Ponto de referência" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
@@ -310,14 +312,47 @@ export default function Delivery() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="relative sm:col-span-2">
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="relative col-span-3">
                       <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
                       <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Cidade</span>
                     </div>
-                    <div className="relative">
-                      <Input id="state" value={stateUF} onChange={(e) => setStateUF(e.target.value.toUpperCase())} placeholder="Estado *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 uppercase peer" maxLength={2} />
-                      <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Estado</span>
+                    <div className="relative col-span-1">
+                      <Select value={stateUF} onValueChange={(v) => setStateUF(v)} disabled>
+                        <SelectTrigger className="mt-1 [&>svg]:hidden">
+                          <SelectValue placeholder="Estado *" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AC">AC</SelectItem>
+                          <SelectItem value="AL">AL</SelectItem>
+                          <SelectItem value="AP">AP</SelectItem>
+                          <SelectItem value="AM">AM</SelectItem>
+                          <SelectItem value="BA">BA</SelectItem>
+                          <SelectItem value="CE">CE</SelectItem>
+                          <SelectItem value="DF">DF</SelectItem>
+                          <SelectItem value="ES">ES</SelectItem>
+                          <SelectItem value="GO">GO</SelectItem>
+                          <SelectItem value="MA">MA</SelectItem>
+                          <SelectItem value="MT">MT</SelectItem>
+                          <SelectItem value="MS">MS</SelectItem>
+                          <SelectItem value="MG">MG</SelectItem>
+                          <SelectItem value="PA">PA</SelectItem>
+                          <SelectItem value="PB">PB</SelectItem>
+                          <SelectItem value="PR">PR</SelectItem>
+                          <SelectItem value="PE">PE</SelectItem>
+                          <SelectItem value="PI">PI</SelectItem>
+                          <SelectItem value="RJ">RJ</SelectItem>
+                          <SelectItem value="RN">RN</SelectItem>
+                          <SelectItem value="RS">RS</SelectItem>
+                          <SelectItem value="RO">RO</SelectItem>
+                          <SelectItem value="RR">RR</SelectItem>
+                          <SelectItem value="SC">SC</SelectItem>
+                          <SelectItem value="SP">SP</SelectItem>
+                          <SelectItem value="SE">SE</SelectItem>
+                          <SelectItem value="TO">TO</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground">Estado</span>
                     </div>
                   </div>
                 </>
@@ -362,7 +397,7 @@ export default function Delivery() {
           <Card className="p-4 shadow-card bg-food-bg">
             <h3 className="font-semibold mb-2">Retirada no local</h3>
             <p className="text-sm text-muted-foreground mb-2">
-              Rua das Flores, 123 - Centro, São Paulo - SP
+              R. Mal. Floriano Peixoto, 598 - Jardim Pres. Kennedy, Embu das Artes - SP, 06820-200
             </p>
             <p className="text-sm text-muted-foreground">
               Tempo estimado: 20-30 minutos

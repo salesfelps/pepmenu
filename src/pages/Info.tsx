@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Phone, Smartphone, CreditCard, Wallet2, Instagram, Facebook } from 'lucide-react';
+import { ArrowLeft, Phone, Smartphone, CreditCard, Wallet2, Instagram, Facebook } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -67,9 +67,13 @@ export default function Info() {
               <h2 className="text-lg font-semibold mb-3">{restaurantInfo.name}</h2>
               <p className="text-muted-foreground mb-4">{restaurantInfo.description}</p>
               <div className="space-y-3 text-sm">
-                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline">
-                  <MapPin className="w-4 h-4" />
-                  <span>{restaurantInfo.address}</span>
+                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  <span
+                    className="text-xs leading-tight break-words"
+                    style={{ display: '-webkit-box', WebkitLineClamp: 2 as any, WebkitBoxOrient: 'vertical' as any, overflow: 'hidden' }}
+                  >
+                    {restaurantInfo.address}
+                  </span>
                 </a>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline">
                   <Phone className="w-4 h-4" />

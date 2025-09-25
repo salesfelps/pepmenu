@@ -13,7 +13,7 @@ export const restaurantInfo: RestaurantInfo = {
   description: 'Sabores autênticos com ingredientes frescos e receitas tradicionais. Uma experiência gastronômica única que combina tradição e inovação.',
   isOpen: true,
   openHours: 'Qui-Dom: 18:00 às 22:00',
-  address: 'Rua das Flores, 123, Centro',
+  address: 'R. Mal. Floriano Peixoto, 598 - Jardim Pres. Kennedy, Embu das Artes - SP, 06820-200',
   phone: '(11) 98765-4321',
   weeklySchedule: [
     { day: 'Segunda', hours: 'Fechado' },
