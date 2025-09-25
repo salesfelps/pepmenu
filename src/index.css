@@ -19,9 +19,10 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 345 8% 15%;
 
-    --primary: 18 95% 55%;
+    /* Primary updated to #1C403B (HSL ≈ 172 39% 18%) */
+    --primary: 172 39% 18%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 18 95% 48%;
+    --primary-hover: 172 39% 15%;
 
     --secondary: 20 6% 90%;
     --secondary-foreground: 345 8% 25%;
@@ -29,7 +30,8 @@ All colors MUST be HSL.
     --muted: 20 6% 95%;
     --muted-foreground: 345 8% 45%;
 
-    --accent: 18 100% 62%;
+    /* Accent aligned with primary for cohesive theme */
+    --accent: 172 39% 24%;
     --accent-foreground: 0 0% 100%;
 
     --success: 142 71% 45%;
@@ -40,7 +42,7 @@ All colors MUST be HSL.
 
     --border: 20 6% 90%;
     --input: 20 6% 90%;
-    --ring: 18 95% 55%;
+    --ring: 172 39% 18%;
 
     /* Restaurant specific colors */
     --restaurant-red: 0 72% 51%;
@@ -87,9 +89,10 @@ All colors MUST be HSL.
     --popover: 345 20% 12%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 18 95% 55%;
+    /* Primary updated to #1C403B (HSL ≈ 172 39% 18%) - dark */
+    --primary: 172 39% 18%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 18 95% 48%;
+    --primary-hover: 172 39% 15%;
 
     --secondary: 345 15% 20%;
     --secondary-foreground: 0 0% 95%;
@@ -97,7 +100,7 @@ All colors MUST be HSL.
     --muted: 345 15% 16%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 18 100% 62%;
+    --accent: 172 39% 24%;
     --accent-foreground: 0 0% 100%;
 
     --success: 142 71% 45%;
@@ -108,7 +111,7 @@ All colors MUST be HSL.
 
     --border: 345 15% 20%;
     --input: 345 15% 20%;
-    --ring: 18 95% 55%;
+    --ring: 172 39% 18%;
 
     /* Restaurant specific colors for dark mode */
     --restaurant-red: 0 72% 51%;
