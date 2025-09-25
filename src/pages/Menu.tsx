@@ -18,9 +18,18 @@ export default function Menu() {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   const filteredProducts = products.filter(product => {
+    const normalize = (s: string) => s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, ''); // remove acentos/diacríticos
+
+    const term = normalize(searchTerm);
+    const categoryName = normalize(categories.find(c => c.id === product.category)?.name || '');
+
     const matchesSearch = searchTerm === '' || 
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase());
+      normalize(product.name).includes(term) ||
+      normalize(product.description).includes(term) ||
+      categoryName.includes(term);
     
     const matchesCategory = searchTerm === '' ? product.category === activeCategory : true;
     
