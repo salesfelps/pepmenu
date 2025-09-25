@@ -7,7 +7,7 @@ import { AppConfig } from '@/types';
 export const getAppConfig = (): AppConfig => {
   return {
     title: import.meta.env.VITE_APP_TITLE || "PepMenu - Cardápio Online",
-    restaurantName: import.meta.env.VITE_RESTAURANT_NAME || "Bella Vista Restaurante",
+    restaurantName: import.meta.env.VITE_RESTAURANT_NAME || "Emburguer Fast",
   };
 };
 

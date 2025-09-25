@@ -55,7 +55,7 @@ npm run preview
 
 ## 🎯 What This Repository Does
 
-PepMenu is a modern food delivery application for "Bella Vista Restaurante" that provides customers with an intuitive mobile-first ordering experience. The app allows users to browse menu items, customize orders, manage their cart, and complete the checkout process with delivery and payment options.
+PepMenu is a modern food delivery application for "Emburguer Fast" that provides customers with an intuitive mobile-first ordering experience. The app allows users to browse menu items, customize orders, manage their cart, and complete the checkout process with delivery and payment options.
 
 **Key responsibilities:**
 - Menu browsing with category-based navigation

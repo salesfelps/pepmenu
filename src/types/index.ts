@@ -47,6 +47,11 @@ export interface PaymentInfo {
   method: 'debit' | 'credit' | 'pix' | 'meal_voucher';
 }
 
+export interface WeeklyScheduleItem {
+  day: string;
+  hours: string; // ex: "18:00 - 22:00" ou "Fechado"
+}
+
 export interface RestaurantInfo {
   name: string;
   description: string;
@@ -54,6 +59,7 @@ export interface RestaurantInfo {
   openHours: string;
   address: string;
   phone: string;
+  weeklySchedule?: WeeklyScheduleItem[]; // opcional para permitir fallback no front
 }
 
 export interface AppConfig {

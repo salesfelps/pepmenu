@@ -18,6 +18,7 @@ import OrderHistory from "./pages/OrderHistory";
 import OrderDetails from "./pages/OrderDetails";
 import BottomNav from "./components/BottomNav";
 import NotFound from "./pages/NotFound";
+import Info from "./pages/Info";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => {
               <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
               <Route path="/order-history" element={<OrderHistory />} />
               <Route path="/order-details/:orderId" element={<OrderDetails />} />
+              <Route path="/info" element={<Info />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

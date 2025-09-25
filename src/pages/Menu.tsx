@@ -135,7 +135,7 @@ export default function Menu() {
     <div className="min-h-screen bg-background">
       <RestaurantHeader />
       
-      <div className="mt-6">
+      <div className="mt-4 pb-16">
         <SearchBar 
           value={searchTerm}
           onChange={setSearchTerm}
@@ -146,7 +146,7 @@ export default function Menu() {
           onCategoryClick={handleCategoryClick}
         />
         
-        <div className="mt-6">
+        <div className="mt-4">
           {renderProducts()}
         </div>
       </div>

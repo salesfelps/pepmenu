@@ -12,9 +12,18 @@ export const restaurantInfo: RestaurantInfo = {
   name: appConfig.restaurantName,
   description: 'Sabores autênticos com ingredientes frescos e receitas tradicionais. Uma experiência gastronômica única que combina tradição e inovação.',
   isOpen: true,
-  openHours: 'Seg-Dom: 11:00 às 23:00',
-  address: 'Rua das Flores, 123 - Centro, São Paulo - SP',
-  phone: '(11) 98765-4321'
+  openHours: 'Qui-Dom: 18:00 às 22:00',
+  address: 'Rua das Flores, 123, Centro',
+  phone: '(11) 98765-4321',
+  weeklySchedule: [
+    { day: 'Segunda', hours: 'Fechado' },
+    { day: 'Terça', hours: 'Fechado' },
+    { day: 'Quarta', hours: 'Fechado' },
+    { day: 'Quinta', hours: '18:00 - 22:00' },
+    { day: 'Sexta', hours: '18:00 - 22:00' },
+    { day: 'Sábado', hours: '18:00 - 22:00' },
+    { day: 'Domingo', hours: '18:00 - 22:00' },
+  ]
 };
 
 const products: Product[] = [

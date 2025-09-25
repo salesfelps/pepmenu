@@ -13,7 +13,7 @@ O PepMenu agora suporta configuração dinâmica através de variáveis de ambie
 
 ### VITE_RESTAURANT_NAME
 - **Descrição**: Define o nome do restaurante que aparece no cabeçalho da aplicação
-- **Valor padrão**: "Bella Vista Restaurante"
+- **Valor padrão**: "Emburguer Fast"
 - **Exemplo**: `VITE_RESTAURANT_NAME="Restaurante do João"`
 
 ## Como Configurar
@@ -69,7 +69,7 @@ VITE_APP_TITLE="Seu Restaurante" VITE_RESTAURANT_NAME="Restaurante XYZ" npm run 
 // src/config/app.ts
 export const appConfig = {
   title: process.env.VITE_APP_TITLE || "PepMenu - Cardápio Online",
-  restaurantName: process.env.VITE_RESTAURANT_NAME || "Bella Vista Restaurante"
+  restaurantName: process.env.VITE_RESTAURANT_NAME || "Emburguer Fast"
 };
 ```
 
