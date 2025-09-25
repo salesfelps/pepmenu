@@ -1,8 +1,8 @@
 // Arquivo: Delivery.tsx
-// Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
+// Comentário: Fluxo de endereço revisado. Placeholders somem ao focar; botão alterna entre "Não sei meu CEP" e "Pesquisar por CEP".
 
 import { useState } from 'react';
-import { ArrowLeft, User, Phone, MapPin, Home } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Search, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart, useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,36 @@ export default function Delivery() {
   const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
   const [customerName, setCustomerName] = useState(state.customer?.name || '');
   const [customerPhone, setCustomerPhone] = useState(state.customer?.phone || '');
-  const [address, setAddress] = useState('');
-  const [cep, setCep] = useState('');
+
+  // CEP / Endereço
+  const [addressMode, setAddressMode] = useState<'cep' | 'manual'>('cep');
+  const [isSearchingCep, setIsSearchingCep] = useState(false);
+  const [showAddressFields, setShowAddressFields] = useState(false);
+  const [cepError, setCepError] = useState('');
+
+  const [cep, setCep] = useState(state.delivery?.cep || '');
+  const [street, setStreet] = useState('');
+  const [number, setNumber] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
+  const [complement, setComplement] = useState('');
+  const [city, setCity] = useState('');
+  const [stateUF, setStateUF] = useState('');
+  const [reference, setReference] = useState('');
 
   const { total } = getCartTotal();
 
-// Função/Classe: handleContinue — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
+  // Esconde placeholder ao focar; restaura ao desfocar se o campo estiver vazio.
+  const handlePlaceholderFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const el = e.currentTarget;
+    if (!el.dataset.ph) el.dataset.ph = el.placeholder || '';
+    el.placeholder = '';
+  };
+  const handlePlaceholderBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const el = e.currentTarget;
+    const ph = el.dataset.ph || '';
+    if (!el.value) el.placeholder = ph;
+  };
+
   const handleContinue = () => {
     if (!customerName.trim() || !customerPhone.trim()) {
       toast({
@@ -37,13 +61,25 @@ export default function Delivery() {
       return;
     }
 
-    if (deliveryType === 'delivery' && (!address.trim() || !cep.trim())) {
-      toast({
-        title: 'Endereço obrigatório',
-        description: 'Por favor, preencha o endereço para entrega.',
-        variant: 'destructive',
-      });
-      return;
+    if (deliveryType === 'delivery') {
+      if (addressMode === 'cep' && !showAddressFields) {
+        toast({
+          title: 'Busque seu CEP',
+          description: 'Digite o CEP e toque em Pesquisar para preencher o endereço.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const requiredMissing = [street, neighborhood, number, city, stateUF].some((v) => !String(v).trim());
+      if (requiredMissing) {
+        toast({
+          title: 'Endereço obrigatório',
+          description: 'Preencha Rua, Nº, Bairro, Cidade e Estado.',
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     // Save customer info
@@ -53,16 +89,60 @@ export default function Delivery() {
     });
 
     // Save delivery info
+    const fullAddress = deliveryType === 'delivery'
+      ? `${street}, ${number}${complement ? ' - ' + complement : ''} - ${neighborhood}, ${city} - ${stateUF}${reference ? ` (Ref.: ${reference})` : ''}`
+      : undefined;
+
     dispatch({
       type: 'SET_DELIVERY',
       payload: {
         type: deliveryType,
-        address: deliveryType === 'delivery' ? address : undefined,
-        cep: deliveryType === 'delivery' ? cep : undefined,
+        address: fullAddress,
+        cep: deliveryType === 'delivery' && addressMode === 'cep' ? cep : undefined,
       }
     });
 
     navigate('/checkout/payment');
+  };
+
+  const handleCepChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 8);
+    const formatted = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+    setCep(formatted);
+    setCepError('');
+    if (addressMode === 'cep') {
+      setShowAddressFields(false);
+    }
+  };
+
+  const handleCepSearch = async () => {
+    const digits = cep.replace(/\D/g, '');
+    if (digits.length !== 8) {
+      setCepError('Digite um CEP válido (8 dígitos).');
+      return;
+    }
+
+    setIsSearchingCep(true);
+    setCepError('');
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data?.erro) {
+        setShowAddressFields(false);
+        setCepError('Endereço não encontrado para este CEP.');
+        return;
+      }
+      setStreet(data.logradouro || '');
+      setNeighborhood(data.bairro || '');
+      setCity(data.localidade || '');
+      setStateUF((data.uf || '').toUpperCase());
+      setShowAddressFields(true);
+    } catch (e) {
+      setShowAddressFields(false);
+      setCepError('Não foi possível buscar o CEP. Tente novamente.');
+    } finally {
+      setIsSearchingCep(false);
+    }
   };
 
   return (
@@ -91,28 +171,32 @@ export default function Delivery() {
           </div>
           
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Nome completo *</Label>
+            <div className="relative">
               <Input
                 id="name"
                 type="text"
-                placeholder="Seu nome"
+                placeholder="Nome *"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                className="mt-1"
+                onFocus={handlePlaceholderFocus}
+                onBlur={handlePlaceholderBlur}
+                className="mt-1 peer"
               />
+              <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Nome</span>
             </div>
             
-            <div>
-              <Label htmlFor="phone">Telefone *</Label>
+            <div className="relative">
               <Input
                 id="phone"
                 type="tel"
-                placeholder="(11) 99999-9999"
+                placeholder="Telefone *"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
-                className="mt-1"
+                onFocus={handlePlaceholderFocus}
+                onBlur={handlePlaceholderBlur}
+                className="mt-1 peer"
               />
+              <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Telefone</span>
             </div>
           </div>
         </Card>
@@ -132,7 +216,6 @@ export default function Delivery() {
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="delivery" id="delivery" />
               <Label htmlFor="delivery" className="flex items-center gap-2 cursor-pointer">
-                <Home className="w-4 h-4" />
                 Entrega à domicílio
               </Label>
             </div>
@@ -152,28 +235,123 @@ export default function Delivery() {
             <h3 className="font-semibold mb-4">Endereço de entrega</h3>
             
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="cep">CEP *</Label>
-                <Input
-                  id="cep"
-                  type="text"
-                  placeholder="00000-000"
-                  value={cep}
-                  onChange={(e) => setCep(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="address">Endereço completo *</Label>
-                <Input
-                  id="address"
-                  type="text"
-                  placeholder="Rua, número, complemento, bairro"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="mt-1"
-                />
+              {addressMode === 'cep' && (
+                <>
+                  <div className="flex items-end gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        id="cep"
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={9}
+                        placeholder="CEP *"
+                        value={cep}
+                        onChange={(e) => handleCepChange(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleCepSearch();
+                        }}
+                        onFocus={handlePlaceholderFocus}
+                        onBlur={handlePlaceholderBlur}
+                        aria-invalid={!!cepError}
+                        aria-describedby={cepError ? 'cep-error' : undefined}
+                        className="mt-1 peer"
+                      />
+                      <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">CEP</span>
+                    </div>
+                    <Button
+                      onClick={handleCepSearch}
+                      disabled={isSearchingCep || cep.replace(/\D/g, '').length !== 8}
+                      className="shrink-0 h-10"
+                    >
+                      {isSearchingCep ? (
+                        <span className="inline-flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Pesquisando...
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-2">
+                          <Search className="w-4 h-4" />
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                  {cepError ? (
+                    <p id="cep-error" className="text-sm text-destructive -mt-2">{cepError}</p>
+                  ) : null}
+                </>
+              )}
+
+              {showAddressFields && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="relative sm:col-span-2">
+                      <Input id="street" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rua *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Rua</span>
+                    </div>
+                    <div className="relative">
+                      <Input id="number" value={number} onChange={(e) => setNumber(e.target.value)} placeholder="Nº *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Nº</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="relative">
+                      <Input id="neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Bairro</span>
+                    </div>
+                    <div className="relative">
+                      <Input id="complement" value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Complemento" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Complemento</span>
+                      <p className="text-xs text-muted-foreground mt-1">Ex.: Apto/Bloco/Casa</p>
+                    </div>
+                    <div className="relative">
+                      <Input id="reference" value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Ponto de referência" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Ponto de referência</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="relative sm:col-span-2">
+                      <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Cidade</span>
+                    </div>
+                    <div className="relative">
+                      <Input id="state" value={stateUF} onChange={(e) => setStateUF(e.target.value.toUpperCase())} placeholder="Estado *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 uppercase peer" maxLength={2} />
+                      <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Estado</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="pt-2 flex justify-center">
+                {addressMode === 'cep' ? (
+                  <button
+                    type="button"
+                    className="text-sm font-semibold text-primary bg-transparent p-0 h-auto focus:outline-none"
+                    onClick={(e) => {
+                      e.currentTarget.blur();
+                      setAddressMode('manual');
+                      setCep('');
+                      setCepError('');
+                      setShowAddressFields(true);
+                    }}
+                  >
+                    Não sei meu CEP
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="text-sm font-semibold text-primary bg-transparent p-0 h-auto focus:outline-none"
+                    onClick={(e) => {
+                      e.currentTarget.blur();
+                      setAddressMode('cep');
+                      setCepError('');
+                      setShowAddressFields(false);
+                    }}
+                  >
+                    Pesquisar por CEP
+                  </button>
+                )}
               </div>
             </div>
           </Card>

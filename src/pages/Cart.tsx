@@ -31,6 +31,8 @@ export default function Cart() {
 
   const { subtotal, discount, total } = getCartTotal();
 
+  const hasDeliveryInfo = Boolean(state.customer && state.delivery && state.delivery.type);
+
 // Função/Classe: handleApplyCoupon — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
   const handleApplyCoupon = async () => {
     setIsApplyingCoupon(true);
@@ -202,6 +204,32 @@ export default function Cart() {
           <span className="truncate">Adicionar mais itens</span>
         </Button>
 
+        {/* Contact & Delivery preview */}
+        {hasDeliveryInfo && (
+          <Card className="p-4 shadow-card">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1 text-sm">
+                <h3 className="font-semibold text-foreground text-base">Informações de contato e entrega</h3>
+                {state.customer && (
+                  <p className="text-muted-foreground">{state.customer.name} • {state.customer.phone}</p>
+                )}
+                {state.delivery && (
+                  <p className="text-muted-foreground">
+                    {state.delivery.type === 'delivery' ? (state.delivery.address || 'Endereço não informado') : 'Retirada no local'}
+                  </p>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/checkout/delivery')}
+              >
+                Editar
+              </Button>
+            </div>
+          </Card>
+        )}
+
         {/* Order Summary */}
         <Card className="p-4 shadow-card">
           <div className="space-y-3">
@@ -276,9 +304,9 @@ export default function Cart() {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-50">
         <Button
           className="w-full h-12 bg-gradient-primary hover:shadow-floating transition-all duration-300 text-lg font-semibold"
-          onClick={() => navigate('/checkout/delivery')}
+          onClick={() => navigate(hasDeliveryInfo ? '/checkout/payment' : '/checkout/delivery')}
         >
-          Confirmar pedido • {formatPrice(total)}
+          {hasDeliveryInfo ? 'Confirmar pedido' : 'Continuar'} • {formatPrice(total)}
         </Button>
       </div>
 

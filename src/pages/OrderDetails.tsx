@@ -3,16 +3,18 @@
 
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MessageCircle, RefreshCw } from 'lucide-react';
-import { useApp } from '@/contexts/AppContext';
+import { useApp, useCart } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatPrice, formatDate } from '@/lib/utils';
+import { products } from '@/data/mockData';
 
 export default function OrderDetails() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { state } = useApp();
+  const { clearCart, addToCart } = useCart();
   
   const order = state.orders.find(o => o.id === orderId);
 
@@ -62,6 +64,21 @@ export default function OrderDetails() {
     );
 
     window.open(`https://wa.me/${restaurantPhone}?text=${message}`, '_blank');
+  };
+
+  const handleRepeatOrder = () => {
+    if (!order) return;
+    // Apenas itens que ainda existem no cardápio
+    const availableIds = new Set(products.map(p => p.id));
+    const itemsToAdd = order.items.filter(i => availableIds.has(i.id));
+
+    // Substitui o carrinho atual pelo pedido repetido
+    clearCart();
+    itemsToAdd.forEach((item) => {
+      addToCart({ ...item });
+    });
+
+    navigate('/cart');
   };
 
   if (!order) {
@@ -193,18 +210,20 @@ export default function OrderDetails() {
 
         {/* Action Buttons */}
         <div className="space-y-3 pb-8">
-          <Button
-            className="w-full h-12 bg-gradient-warm hover:shadow-floating transition-all duration-300"
-            onClick={handleSendWhatsApp}
-          >
-            <MessageCircle className="w-5 h-5 mr-2" />
-            Entrar em contato via WhatsApp
-          </Button>
+          {order.status === 'preparing' && (
+            <Button
+              className="w-full h-12 bg-gradient-warm hover:shadow-floating transition-all duration-300"
+              onClick={handleSendWhatsApp}
+            >
+              <MessageCircle className="w-5 h-5 mr-2" />
+              Entrar em contato via WhatsApp
+            </Button>
+          )}
           
           <Button
             variant="outline"
             className="w-full h-12 border-primary text-primary hover:bg-primary/5"
-            onClick={() => navigate('/')}
+            onClick={handleRepeatOrder}
           >
             <RefreshCw className="w-5 h-5 mr-2" />
             Fazer novo pedido
