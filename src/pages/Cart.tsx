@@ -1,7 +1,7 @@
 // Arquivo: Cart.tsx
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, Tag, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart, useApp } from '@/contexts/AppContext';
@@ -12,13 +12,22 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import ProductModal from '@/components/ProductModal';
 
 export default function Cart() {
   const navigate = useNavigate();
-  const { cart, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
+  const { cart, updateQuantity, updateCartItem, removeFromCart, getCartTotal, clearCart } = useCart();
   const { state, dispatch } = useApp();
   const [couponCode, setCouponCode] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+  // Foco no topo ao entrar na tela
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Estado para edição de item via Drawer
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const { subtotal, discount, total } = getCartTotal();
 
@@ -100,7 +109,7 @@ export default function Cart() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-background pb-32 overflow-x-hidden">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="flex items-center justify-between p-4">
@@ -130,16 +139,12 @@ export default function Cart() {
         {/* Cart Items */}
         {cart.map((item, index) => (
           <Card key={`${item.id}-${index}`} className="p-4 shadow-card">
-            <div className="flex items-start gap-4">
+            <div className="flex items-stretch gap-4">
+              {/* Coluna esquerda: título, descrição, observação e ações */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between">
-                  <h3 className="font-semibold text-foreground line-clamp-1">
-                    {item.quantity}x {item.name}
-                  </h3>
-                  <span className="text-primary font-bold ml-2 flex-shrink-0">
-                    {formatPrice(item.price * item.quantity)}
-                  </span>
-                </div>
+                <h3 className="font-semibold text-foreground line-clamp-1">
+                  {item.quantity}x {item.name}
+                </h3>
                 <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                   {item.description}
                 </p>
@@ -148,28 +153,41 @@ export default function Cart() {
                     Obs: {item.observation}
                   </p>
                 )}
-                <div className="mt-3 flex items-center justify-between">
+                <div className="mt-3 flex items-center gap-4">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate('/')}
+                    onClick={() => setEditingIndex(index)}
                   >
                     Editar
                   </Button>
                   <button
                     type="button"
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => {
+                      if (item.quantity > 1) {
+                        updateQuantity(item.id, item.quantity - 1);
+                      } else {
+                        removeFromCart(item.id);
+                      }
+                    }}
                     className="text-destructive text-sm font-medium hover:underline"
                   >
                     Remover
                   </button>
                 </div>
               </div>
-              <img 
-                src={item.image} 
-                alt={item.name}
-                className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-              />
+
+              {/* Coluna direita: preço no canto superior e imagem abaixo */}
+              <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                <span className="text-primary font-bold ml-2">
+                  {formatPrice(item.price * item.quantity)}
+                </span>
+                <img 
+                  src={item.image} 
+                  alt={item.name}
+                  className="w-20 h-20 rounded-lg object-cover"
+                />
+              </div>
             </div>
           </Card>
         ))}
@@ -178,10 +196,10 @@ export default function Cart() {
         <Button
           variant="outline"
           onClick={() => navigate('/')}
-          className="w-full border-dashed border-primary text-primary hover:bg-primary/5"
+          className="w-full max-w-full overflow-hidden border-primary text-primary hover:bg-primary/5"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Adicionar mais itens
+          <Plus className="w-4 h-4" />
+          <span className="truncate">Adicionar mais itens</span>
         </Button>
 
         {/* Order Summary */}
@@ -263,6 +281,23 @@ export default function Cart() {
           Confirmar pedido • {formatPrice(total)}
         </Button>
       </div>
+
+      {/* Drawer de edição */}
+      {editingIndex !== null && cart[editingIndex] && (
+        <ProductModal
+          product={cart[editingIndex]}
+          isOpen={true}
+          onClose={() => setEditingIndex(null)}
+          initialQuantity={cart[editingIndex].quantity}
+          initialObservation={cart[editingIndex].observation}
+          confirmLabel="Atualizar"
+          onConfirm={({ product, quantity, observation }) => {
+            const current = cart[editingIndex!];
+            // Atualiza quantidade e observação do item atual
+            updateCartItem(current.id, quantity, observation);
+          }}
+        />
+      )}
     </div>
   );
 }

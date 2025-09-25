@@ -19,6 +19,7 @@ type AppAction =
   | { type: 'ADD_TO_CART'; payload: CartItem }
   | { type: 'REMOVE_FROM_CART'; payload: string }
   | { type: 'UPDATE_CART_QUANTITY'; payload: { id: string; quantity: number } }
+  | { type: 'UPDATE_CART_ITEM'; payload: { id: string; quantity: number; observation?: string } }
   | { type: 'CLEAR_CART' }
   | { type: 'SET_CUSTOMER'; payload: CustomerInfo }
   | { type: 'SET_DELIVERY'; payload: DeliveryInfo }
@@ -60,6 +61,16 @@ function appReducer(state: AppState, action: AppAction): AppState {
         cart: state.cart.map(item =>
           item.id === action.payload.id
             ? { ...item, quantity: action.payload.quantity }
+            : item
+        ),
+      };
+
+    case 'UPDATE_CART_ITEM':
+      return {
+        ...state,
+        cart: state.cart.map(item =>
+          item.id === action.payload.id
+            ? { ...item, quantity: action.payload.quantity, observation: action.payload.observation }
             : item
         ),
       };
@@ -131,6 +142,11 @@ export function useCart() {
   const addToCart = (item: CartItem) => {
     dispatch({ type: 'ADD_TO_CART', payload: item });
   };
+
+// Função/Classe: updateCartItem — Atualiza quantidade e observação do item
+  const updateCartItem = (id: string, quantity: number, observation?: string) => {
+    dispatch({ type: 'UPDATE_CART_ITEM', payload: { id, quantity, observation } });
+  };
   
 // Função/Classe: removeFromCart — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
   const removeFromCart = (id: string) => {
@@ -170,6 +186,7 @@ export function useCart() {
     addToCart,
     removeFromCart,
     updateQuantity,
+    updateCartItem,
     clearCart,
     getCartTotal,
     getCartItemCount,

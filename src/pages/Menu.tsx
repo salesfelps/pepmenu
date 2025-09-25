@@ -1,7 +1,7 @@
 // Arquivo: Menu.tsx
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Product } from '@/types';
 import { categories, products } from '@/data/mockData';
 import RestaurantHeader from '@/components/RestaurantHeader';
@@ -16,6 +16,11 @@ export default function Menu() {
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id || '');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+
+  // Evita que o scroll programático (ao clicar na categoria) seja sobrescrito pelo listener de scroll
+  const isProgrammaticScrollRef = useRef(false);
+  const scrollUnlockTimeoutRef = useRef<number | null>(null);
+  const scrollUnlockRafRef = useRef<number | null>(null);
 
   const filteredProducts = products.filter(product => {
     const normalize = (s: string) => s
@@ -46,11 +51,58 @@ export default function Menu() {
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId);
     setSearchTerm(''); // Clear search when changing category
-    
-    // Scroll to category section
-    const element = document.getElementById(`category-${categoryId}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const section = document.getElementById(`category-${categoryId}`);
+    const nav = document.getElementById('category-nav');
+
+    if (section) {
+      const navHeight = nav?.getBoundingClientRect().height ?? 0;
+      const rect = section.getBoundingClientRect();
+      // Fudge adicional de 4px para garantir que o topo da seção passe do limite do sticky
+      const targetTop = window.scrollY + rect.top - navHeight - 12; // 12px = 8px base + 4px folga
+
+      // Trava temporariamente o listener de scroll para não "puxar" a categoria errada durante a animação
+      isProgrammaticScrollRef.current = true;
+      if (scrollUnlockTimeoutRef.current) {
+        window.clearTimeout(scrollUnlockTimeoutRef.current);
+        scrollUnlockTimeoutRef.current = null;
+      }
+      if (scrollUnlockRafRef.current) {
+        cancelAnimationFrame(scrollUnlockRafRef.current);
+        scrollUnlockRafRef.current = null;
+      }
+
+      // Fallback de segurança para desbloquear mesmo que não atinja exatamente o alvo
+      scrollUnlockTimeoutRef.current = window.setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 1500);
+
+      // Observa até a rolagem "assentar" próxima ao alvo
+      const watch = () => {
+        const navNow = document.getElementById('category-nav');
+        const h = navNow?.getBoundingClientRect().height ?? 0;
+        const anchor = h + 8;
+        const r = section.getBoundingClientRect();
+        const diff = Math.abs(r.top - anchor);
+        const atBottom = window.innerHeight + window.scrollY >= (document.documentElement.scrollHeight - 2);
+        if (diff <= 6 || atBottom) {
+          // desbloqueia e limpa timeouts/raf
+          isProgrammaticScrollRef.current = false;
+          if (scrollUnlockTimeoutRef.current) {
+            window.clearTimeout(scrollUnlockTimeoutRef.current);
+            scrollUnlockTimeoutRef.current = null;
+          }
+          if (scrollUnlockRafRef.current) {
+            cancelAnimationFrame(scrollUnlockRafRef.current);
+            scrollUnlockRafRef.current = null;
+          }
+          return;
+        }
+        scrollUnlockRafRef.current = requestAnimationFrame(watch);
+      };
+      scrollUnlockRafRef.current = requestAnimationFrame(watch);
+
+      window.scrollTo({ top: targetTop, behavior: 'smooth' });
     }
   };
 
@@ -59,33 +111,54 @@ export default function Menu() {
 // Função/Classe: handleScroll — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
     const handleScroll = () => {
       if (searchTerm !== '') return; // Don't update category while searching
-      
+      if (isProgrammaticScrollRef.current) return; // Ignora atualização durante rolagem programática
+
+      const nav = document.getElementById('category-nav');
+      const navHeight = nav?.getBoundingClientRect().height ?? 0;
+      const anchor = navHeight + 8; // ponto de referência logo abaixo do menu
+
       const categoryElements = categories.map(category => ({
         id: category.id,
         element: document.getElementById(`category-${category.id}`)
-      })).filter(item => item.element);
+      })).filter(item => item.element) as { id: string; element: HTMLElement }[];
 
-      let closestCategory = categories[0]?.id;
+      // Nova regra: escolher a seção cujo topo está mais PRÓXIMO do anchor (abaixo do sticky)
+      let currentId = categories[0]?.id || '';
       let minDistance = Infinity;
 
       categoryElements.forEach(({ id, element }) => {
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          const distance = Math.abs(rect.top - 200); // 200px offset for header
-          
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestCategory = id;
-          }
+        const rect = element.getBoundingClientRect();
+        const distance = Math.abs(rect.top - anchor);
+        if (distance < minDistance) {
+          minDistance = distance;
+          currentId = id;
         }
       });
 
-      setActiveCategory(closestCategory);
+      // Se está no final da página, força a última categoria
+      const atBottom = window.innerHeight + window.scrollY >= (document.documentElement.scrollHeight - 2);
+      if (atBottom) {
+        currentId = categories[categories.length - 1]?.id || currentId;
+      }
+
+      setActiveCategory(currentId);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [searchTerm]);
+
+  // Cleanup timers/raf on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollUnlockTimeoutRef.current) {
+        window.clearTimeout(scrollUnlockTimeoutRef.current);
+      }
+      if (scrollUnlockRafRef.current) {
+        cancelAnimationFrame(scrollUnlockRafRef.current);
+      }
+    };
+  }, []);
 
 // Função/Classe: renderProducts — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
   const renderProducts = () => {

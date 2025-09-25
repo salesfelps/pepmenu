@@ -74,7 +74,7 @@ export default function CategoryNav({ activeCategory, onCategoryClick }: Categor
   }, [activeCategory]);
 
   return (
-    <div className="sticky top-0 z-20 bg-gradient-food backdrop-blur-sm border-b border-border">
+    <div id="category-nav" className="sticky top-0 z-20 bg-gradient-food backdrop-blur-sm border-b border-border">
       <div ref={scrollRef} className="w-full overflow-x-auto">
         <div className="flex w-max gap-2 p-4">
           {categories.map((category, index) => (
