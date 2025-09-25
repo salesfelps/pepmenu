@@ -2,13 +2,14 @@
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
 import { Product, Category, RestaurantInfo, Order } from '@/types';
+import { appConfig } from '@/config/app';
 import hamburgerImg from '@/assets/hamburger.jpg';
 import pizzaImg from '@/assets/pizza.jpg';
 import saladImg from '@/assets/salad.jpg';
 import drinkImg from '@/assets/drink.jpg';
 
 export const restaurantInfo: RestaurantInfo = {
-  name: 'Bella Vista Restaurante',
+  name: appConfig.restaurantName,
   description: 'Sabores autênticos com ingredientes frescos e receitas tradicionais. Uma experiência gastronômica única que combina tradição e inovação.',
   isOpen: true,
   openHours: 'Seg-Dom: 11:00 às 23:00',

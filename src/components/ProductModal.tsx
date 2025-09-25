@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { formatPrice } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
 
 interface ProductModalProps {
   product: Product | null;
@@ -34,11 +33,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     };
 
     addToCart(cartItem);
-    toast({
-      title: 'Produto adicionado!',
-      description: `${product.name} foi adicionado ao seu carrinho.`,
-    });
-    
+
     onClose();
     setQuantity(1);
     setObservation('');
@@ -57,28 +52,27 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="p-0 max-w-md mx-auto max-h-[90vh] overflow-hidden">
+      <DialogContent className="p-0 max-w-md mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader className="relative p-0">
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 left-4 z-10 bg-white/90 hover:bg-white rounded-full shadow-md"
+            className="absolute top-2 left-2 z-10 bg-white/90 hover:bg-white rounded-full shadow-md"
             onClick={onClose}
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           
-          <div className="aspect-square relative overflow-hidden">
+          <div className="w-full flex items-center justify-center p-4">
             <img 
               src={product.image} 
               alt={product.name}
-              className="w-full h-full object-cover"
+              className="max-h-48 md:max-h-64 w-auto object-contain rounded-lg mx-auto"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           </div>
         </DialogHeader>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 md:p-6 space-y-6">
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-2">{product.name}</h2>
             <p className="text-muted-foreground">{product.description}</p>
@@ -129,7 +123,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
             className="w-full h-12 bg-gradient-primary hover:shadow-lg transition-all duration-300 text-lg font-semibold"
             onClick={handleAddToCart}
           >
-            Adicionar • {formatPrice(totalPrice)}
+            Adicionar {formatPrice(totalPrice)}
           </Button>
         </div>
       </DialogContent>

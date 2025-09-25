@@ -56,6 +56,11 @@ export interface RestaurantInfo {
   phone: string;
 }
 
+export interface AppConfig {
+  title: string;
+  restaurantName: string;
+}
+
 export interface Coupon {
   code: string;
   discount: number;

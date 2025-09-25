@@ -208,3 +208,28 @@ pepmenu/
 - **State Management:** Cart and order data stored in memory (lost on refresh)
 
 *Updated at: 2024-12-19 UTC*
+
+## 📱 Diretriz de Produto: Mobile-first e Configuração Dinâmica
+
+- Foco principal: experiência mobile (layout, performance e navegação otimizados para smartphones).
+- Evolução planejada: integração futura com um sistema de gestão (backoffice) onde o dono do restaurante realiza configurações do app.
+- Princípio: todas as informações devem ser variáveis/configuráveis (evitar hardcode).
+
+Informações que devem ser variáveis:
+- Nome e descrição do restaurante; status de funcionamento e horário.
+- Endereço, telefone e dados de contato.
+- Categorias, produtos, descrições, imagens, preços, promoções.
+- Taxas, opções de entrega/retirada e formas de pagamento.
+- Textos/labels de UI e mensagens.
+
+Diretrizes de implementação:
+- Centralizar configurações em AppConfig/Context e/ou via API; usar variáveis de ambiente (.env) para URLs e chaves.
+- Tipar configurações em src/types (ex.: AppConfig) e manter defaults seguros com fallback para mockData em dev.
+- Componentes devem receber dados via props/context; evitar literais fixos no JSX.
+- Preparar para internacionalização (i18n) e temas, quando aplicável.
+
+Implicações para PRs:
+- Evitar código com dados/textos fixos; preferir fontes de dados configuráveis.
+- Validar novas telas/fluxos sob a ótica mobile-first.
+
+*Section updated: 2025-09-25 UTC*

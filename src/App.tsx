@@ -1,12 +1,14 @@
 // Arquivo: App.tsx
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
+import { appConfig } from "@/config/app";
 import Menu from "./pages/Menu";
 import Cart from "./pages/Cart";
 import Delivery from "./pages/Delivery";
@@ -20,7 +22,13 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 // Função/Classe: App — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
-const App = () => (
+const App = () => {
+  // Define o título da página dinamicamente
+  useEffect(() => {
+    document.title = appConfig.title;
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AppProvider>
@@ -45,6 +53,7 @@ const App = () => (
       </AppProvider>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
