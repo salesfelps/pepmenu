@@ -143,11 +143,7 @@ export default function RestaurantHeader() {
               >
                 Mais informações
               </Button>
-              {!isOpenNow && nextOpening && nextOpening.daysAhead === 0 && (
-                <div className="mt-1 text-destructive font-medium">
-                  {`Abre às ${nextOpening.time}`}
-                </div>
-              )}
+
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 // Arquivo: CategoryNav.tsx
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { categories } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 
@@ -46,6 +46,33 @@ export default function CategoryNav({ activeCategory, onCategoryClick }: Categor
     onCategoryClick(categoryId);
   };
 
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const index = categories.findIndex(c => c.id === activeCategory);
+    if (index === -1) return;
+
+    const btn = container.querySelector<HTMLButtonElement>(`button[data-cat-id="${activeCategory}"]`);
+    if (!btn) return;
+
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    let targetLeft = 0;
+
+    if (index === categories.length - 1) {
+      targetLeft = maxScrollLeft; // última: encostar direita
+    } else if (index > 0) {
+      const btnRect = btn.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const offsetToCenter = (btnRect.left + btnRect.width / 2) - (containerRect.left + container.clientWidth / 2);
+      targetLeft = container.scrollLeft + offsetToCenter;
+      targetLeft = Math.max(0, Math.min(targetLeft, maxScrollLeft));
+    } else {
+      targetLeft = 0; // primeira: encostar esquerda
+    }
+
+    container.scrollTo({ left: targetLeft, behavior: 'smooth' });
+  }, [activeCategory]);
+
   return (
     <div className="sticky top-0 z-20 bg-gradient-food backdrop-blur-sm border-b border-border">
       <div ref={scrollRef} className="w-full overflow-x-auto">
@@ -53,6 +80,7 @@ export default function CategoryNav({ activeCategory, onCategoryClick }: Categor
           {categories.map((category, index) => (
             <Button
               key={category.id}
+              data-cat-id={category.id}
               variant={activeCategory === category.id ? 'default' : 'secondary'}
               size="sm"
               onClick={(e) => handleCategoryClick(category.id, index, e)}

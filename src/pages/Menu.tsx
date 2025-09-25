@@ -92,7 +92,7 @@ export default function Menu() {
     if (searchTerm) {
       // Show search results
       return (
-        <div className="px-4 pb-24">
+        <div className="px-4 pb-0">
           <h2 className="text-xl font-bold mb-4 text-foreground">
             Resultados da busca "{searchTerm}"
           </h2>
@@ -117,7 +117,7 @@ export default function Menu() {
 
     // Show products by category
     return (
-      <div className="pb-24">
+      <div className="pb-0">
         {categories.map(category => (
           <div key={category.id} id={`category-${category.id}`} className="mb-8">
             <div className="px-4 mb-4">
@@ -157,6 +157,14 @@ export default function Menu() {
         
         <div className="mt-4">
           {renderProducts()}
+          <footer className="px-4 py-8 text-center text-xs text-muted-foreground bg-primary/5">
+            <p className="mb-1">Emburguer Fast - 2017. Todos os direitos reservados.</p>
+            <p className="mb-1">CNPJ: ....</p>
+            <p className="mb-3">Endereço: ....</p>
+            <p>
+              Plataforma fornecida por <a href="https://app.pepchat.com.br/" target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground">PepChat</a>.
+            </p>
+          </footer>
         </div>
       </div>
 

@@ -15,7 +15,7 @@ import { toast } from '@/hooks/use-toast';
 
 export default function Cart() {
   const navigate = useNavigate();
-  const { cart, updateQuantity, removeFromCart, getCartTotal } = useCart();
+  const { cart, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
   const { state, dispatch } = useApp();
   const [couponCode, setCouponCode] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
@@ -103,16 +103,26 @@ export default function Cart() {
     <div className="min-h-screen bg-background pb-32">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
-        <div className="flex items-center p-4">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/')}
+              className="mr-3"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-semibold">Carrinho</h1>
+          </div>
           <Button
             variant="ghost"
-            size="icon"
-            onClick={() => navigate('/')}
-            className="mr-3"
+            size="sm"
+            onClick={() => clearCart()}
+            className="text-destructive hover:text-destructive"
           >
-            <ArrowLeft className="w-5 h-5" />
+            Limpar
           </Button>
-          <h1 className="text-xl font-semibold">Carrinho</h1>
         </div>
       </div>
 
@@ -138,7 +148,7 @@ export default function Cart() {
                   </p>
                 )}
                 <p className="text-lg font-bold text-primary mt-2">
-                  {formatPrice(item.price)}
+                  {formatPrice(item.price * item.quantity)}
                 </p>
               </div>
               
@@ -190,52 +200,6 @@ export default function Cart() {
           Adicionar mais itens
         </Button>
 
-        {/* Coupon Section */}
-        <Card className="p-4 shadow-card">
-          <Label className="text-sm font-medium flex items-center gap-2 mb-3">
-            <Tag className="w-4 h-4" />
-            Cupom de desconto
-          </Label>
-          
-          {state.appliedCoupon ? (
-            <div className="flex items-center justify-between p-3 bg-success/10 rounded-lg">
-              <div>
-                <p className="font-medium text-success">Cupom aplicado: {state.appliedCoupon.code}</p>
-                <p className="text-sm text-muted-foreground">
-                  {state.appliedCoupon.type === 'percentage' 
-                    ? `${state.appliedCoupon.discount}% de desconto`
-                    : `${formatPrice(state.appliedCoupon.discount)} de desconto`
-                  }
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRemoveCoupon}
-                className="text-destructive hover:text-destructive"
-              >
-                Remover
-              </Button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <Input
-                placeholder="Digite seu cupom"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value)}
-                className="flex-1"
-              />
-              <Button
-                onClick={handleApplyCoupon}
-                disabled={!couponCode.trim() || isApplyingCoupon}
-                variant="outline"
-              >
-                {isApplyingCoupon ? 'Aplicando...' : 'Aplicar'}
-              </Button>
-            </div>
-          )}
-        </Card>
-
         {/* Order Summary */}
         <Card className="p-4 shadow-card">
           <div className="space-y-3">
@@ -258,16 +222,61 @@ export default function Cart() {
               <span className="text-primary">{formatPrice(total)}</span>
             </div>
           </div>
+
+          {/* Coupon Section (moved below total) */}
+          <div>
+            <Label className="text-sm font-medium flex items-center gap-2 mb-3">
+              <Tag className="w-4 h-4" />
+              Cupom de desconto
+            </Label>
+            {state.appliedCoupon ? (
+              <div className="flex items-center justify-between p-3 bg-success/10 rounded-lg">
+                <div>
+                  <p className="font-medium text-success">Cupom aplicado: {state.appliedCoupon.code}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {state.appliedCoupon.type === 'percentage' 
+                      ? `${state.appliedCoupon.discount}% de desconto`
+                      : `${formatPrice(state.appliedCoupon.discount)} de desconto`
+                    }
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveCoupon}
+                  className="text-destructive hover:text-destructive"
+                >
+                  Remover
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Digite seu cupom"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={handleApplyCoupon}
+                  disabled={!couponCode.trim() || isApplyingCoupon}
+                  variant="outline"
+                >
+                  {isApplyingCoupon ? 'Aplicando...' : 'Aplicar'}
+                </Button>
+              </div>
+            )}
+          </div>
         </Card>
       </div>
 
       {/* Fixed Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-50">
         <Button
           className="w-full h-12 bg-gradient-primary hover:shadow-floating transition-all duration-300 text-lg font-semibold"
           onClick={() => navigate('/checkout/delivery')}
         >
-          Continuar • {formatPrice(total)}
+          Confirmar pedido • {formatPrice(total)}
         </Button>
       </div>
     </div>
