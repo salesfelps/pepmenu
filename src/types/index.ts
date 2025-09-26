@@ -25,7 +25,7 @@ export interface Order {
   id: string;
   date: string;
   total: number;
-  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered';
+  status: 'pending' | 'confirmed' | 'preparing' | 'on_route' | 'ready' | 'delivered' | 'canceled';
   items: CartItem[];
   customer: CustomerInfo;
   delivery: DeliveryInfo;

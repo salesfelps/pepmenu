@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { formatPrice } from '@/lib/utils';
 import { PaymentInfo } from '@/types';
 import { toast } from '@/hooks/use-toast';
+import { appConfig } from '@/config/app';
 
 export default function Payment() {
   const navigate = useNavigate();
@@ -51,6 +52,26 @@ export default function Payment() {
   ];
 
 // Função/Classe: handleFinishOrder — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
+  // Gera um código curto do pedido, ex.: EMB0001, baseado no nome do restaurante
+  const generateOrderCode = () => {
+    const prefix = appConfig.restaurantName
+      .replace(/[^A-Za-z]/g, '')
+      .slice(0, 3)
+      .toUpperCase();
+
+    // Busca o maior sequencial existente com o mesmo prefixo
+    const seq = state.orders
+      .map(o => o.id)
+      .filter(id => id.startsWith(prefix))
+      .map(id => {
+        const m = id.match(/^[A-Z]+(\d+)$/);
+        return m ? parseInt(m[1], 10) : 0;
+      })
+      .reduce((max, n) => Math.max(max, n), 0) + 1;
+
+    return `${prefix}${String(seq).padStart(4, '0')}`;
+  };
+
   const handleFinishOrder = async () => {
     if (!paymentMethod) {
       toast({
@@ -81,7 +102,7 @@ export default function Payment() {
       });
 
       // Create order
-      const orderId = `ORD${Date.now()}`;
+      const orderId = generateOrderCode();
       const order = {
         id: orderId,
         date: new Date().toISOString(),

@@ -117,11 +117,74 @@ export const categories: Category[] = [
 ];
 
 export const mockOrders: Order[] = [
+  // Exemplos para validação local — cobrindo todos os status
   {
-    id: 'ORD001',
-    date: '2024-09-20T19:30:00Z',
+    id: 'EMB0007',
+    date: '2025-09-25T19:10:00Z',
+    total: 41.70,
+    status: 'pending', // Pedido recebido -> Status: Aguardando confirmação
+    items: [
+      { ...products[0], quantity: 1, observation: 'Sem picles' },
+      { ...products[3], quantity: 2 }
+    ],
+    customer: { name: 'Ana Paula', phone: '(11) 91234-5678' },
+    delivery: { type: 'delivery', address: 'Av. Central, 123 - Centro' },
+    payment: { method: 'pix' }
+  },
+  {
+    id: 'EMB0006',
+    date: '2025-09-25T18:50:00Z',
+    total: 28.90,
+    status: 'confirmed', // Pedido confirmado -> Status: Em preparação
+    items: [
+      { ...products[4], quantity: 1 }
+    ],
+    customer: { name: 'Bruno Souza', phone: '(11) 92345-6789' },
+    delivery: { type: 'delivery', address: 'Rua das Flores, 456 - Jardim' },
+    payment: { method: 'credit' }
+  },
+  {
+    id: 'EMB0005',
+    date: '2025-09-25T18:40:00Z',
+    total: 69.80,
+    status: 'preparing', // Pedido confirmado -> Status: Em preparação
+    items: [
+      { ...products[1], quantity: 2 }
+    ],
+    customer: { name: 'Carlos Lima', phone: '(11) 93456-7890' },
+    delivery: { type: 'delivery', address: 'Rua B, 200 - Vila Nova' },
+    payment: { method: 'debit' }
+  },
+  {
+    id: 'EMB0004',
+    date: '2025-09-25T18:20:00Z',
+    total: 55.80,
+    status: 'on_route', // Pedido a caminho -> Status: Em rota de entrega
+    items: [
+      { ...products[0], quantity: 1 },
+      { ...products[3], quantity: 3 }
+    ],
+    customer: { name: 'Daniela Rocha', phone: '(11) 94567-8901' },
+    delivery: { type: 'delivery', address: 'Alameda Verde, 789 - Parque' },
+    payment: { method: 'pix' }
+  },
+  {
+    id: 'EMB0003',
+    date: '2025-09-25T18:00:00Z',
+    total: 32.90,
+    status: 'ready', // Pedido pronto -> Status: Pronto para retirar
+    items: [
+      { ...products[1], quantity: 1 }
+    ],
+    customer: { name: 'Eduarda N.', phone: '(11) 95678-9012' },
+    delivery: { type: 'pickup' },
+    payment: { method: 'meal_voucher' }
+  },
+  {
+    id: 'EMB0002',
+    date: '2025-09-24T20:15:00Z',
     total: 53.80,
-    status: 'delivered',
+    status: 'delivered', // Pedido entregue -> Status: Concluído
     items: [
       { ...products[0], quantity: 2, observation: 'Sem cebola' },
       { ...products[3], quantity: 2 }
@@ -131,10 +194,10 @@ export const mockOrders: Order[] = [
     payment: { method: 'pix' }
   },
   {
-    id: 'ORD002',
-    date: '2024-09-18T12:15:00Z',
+    id: 'EMB0001',
+    date: '2025-09-23T12:15:00Z',
     total: 32.90,
-    status: 'delivered',
+    status: 'canceled', // Pedido cancelado -> Status: Cancelado
     items: [
       { ...products[1], quantity: 1 }
     ],

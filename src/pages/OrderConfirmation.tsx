@@ -52,6 +52,27 @@ export default function OrderConfirmation() {
     );
   }
 
+  // Define título do cabeçalho conforme o status do pedido
+  const headerTitle = (() => {
+    switch (order.status) {
+      case 'pending':
+        return 'Pedido recebido';
+      case 'confirmed':
+      case 'preparing':
+        return 'Pedido confirmado';
+      case 'on_route':
+        return 'Pedido a caminho';
+      case 'ready':
+        return 'Pedido pronto';
+      case 'delivered':
+        return 'Pedido entregue';
+      case 'canceled':
+        return 'Pedido cancelado';
+      default:
+        return 'Pedido';
+    }
+  })();
+
   return (
     <div className="min-h-screen bg-background">
       <div className="p-4 space-y-6">
@@ -61,11 +82,13 @@ export default function OrderConfirmation() {
             <CheckCircle className="w-12 h-12 text-success" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">
-            Pedido confirmado!
+            {headerTitle}
           </h1>
-          <p className="text-muted-foreground">
-            Seu pedido foi recebido e está sendo preparado.
-          </p>
+          {order.status === 'pending' && (
+            <p className="text-muted-foreground">
+              Seu pedido foi recebido e logo será preparado.
+            </p>
+          )}
         </div>
 
         {/* Order Info */}
@@ -81,8 +104,14 @@ export default function OrderConfirmation() {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Status:</span>
-              <span className="font-medium text-restaurant-orange capitalize">
-                {order.status === 'pending' ? 'Aguardando confirmação' : order.status}
+              <span className="font-medium text-restaurant-orange capitalize ml-1">
+                {order.status === 'pending' ? 'Aguardando confirmação' :
+                 order.status === 'confirmed' ? 'Em preparação' :
+                 order.status === 'preparing' ? 'Em preparação' :
+                 order.status === 'on_route' ? 'Em rota de entrega' :
+                 order.status === 'ready' ? 'Pronto para retirar' :
+                 order.status === 'delivered' ? 'Concluído' :
+                 order.status === 'canceled' ? 'Cancelado' : order.status}
               </span>
             </div>
             

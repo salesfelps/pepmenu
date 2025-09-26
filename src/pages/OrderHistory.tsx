@@ -26,7 +26,11 @@ export default function OrderHistory() {
       case 'preparing':
         return 'bg-restaurant-orange text-white';
       case 'confirmed':
+      case 'on_route':
         return 'bg-restaurant-warm text-white';
+      case 'canceled':
+        return 'bg-destructive text-destructive-foreground';
+      case 'pending':
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -35,16 +39,21 @@ export default function OrderHistory() {
 // Função/Classe: getStatusText — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
   const getStatusText = (status: Order['status']) => {
     switch (status) {
-      case 'delivered':
-        return 'Entregue';
-      case 'ready':
-        return 'Pronto';
-      case 'preparing':
-        return 'Preparando';
+      case 'pending':
+        return 'Aguardando confirmação';
       case 'confirmed':
-        return 'Confirmado';
+      case 'preparing':
+        return 'Em preparação';
+      case 'on_route':
+        return 'Em rota de entrega';
+      case 'ready':
+        return 'Pronto para retirar';
+      case 'delivered':
+        return 'Concluído';
+      case 'canceled':
+        return 'Cancelado';
       default:
-        return 'Aguardando';
+        return 'Aguardando confirmação';
     }
   };
 

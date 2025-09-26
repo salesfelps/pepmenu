@@ -130,7 +130,7 @@ export default function Delivery() {
       const data = await res.json();
       if (data?.erro) {
         setShowAddressFields(false);
-        setCepError('Endereço não encontrado para este CEP.');
+        setCepError('Endereço não encontrado.');
         return;
       }
       setStreet(data.logradouro || '');
@@ -141,7 +141,7 @@ export default function Delivery() {
       setShowAddressFields(true);
     } catch (e) {
       setShowAddressFields(false);
-      setCepError('Não foi possível buscar o CEP. Tente novamente.');
+      setCepError('Endereço não encontrado.');
     } finally {
       setIsSearchingCep(false);
     }
@@ -264,16 +264,12 @@ export default function Delivery() {
                       onClick={handleCepSearch}
                       disabled={isSearchingCep || cep.replace(/\D/g, '').length !== 8}
                       className="shrink-0 h-10"
+                      aria-busy={isSearchingCep}
                     >
                       {isSearchingCep ? (
-                        <span className="inline-flex items-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Pesquisando...
-                        </span>
+                        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                       ) : (
-                        <span className="inline-flex items-center gap-2">
-                          <Search className="w-4 h-4" />
-                        </span>
+                        <Search className="w-4 h-4" aria-hidden="true" />
                       )}
                     </Button>
                   </div>
