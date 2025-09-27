@@ -11,7 +11,7 @@ interface SearchBarProps {
   placeholder?: string;
 }
 
-export default function SearchBar({ value, onChange, placeholder = "Busque por um produto" }: SearchBarProps) {
+export default function SearchBar({ value, onChange, placeholder = "Pesquisar produto" }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const clearSearch = () => {
@@ -22,14 +22,14 @@ export default function SearchBar({ value, onChange, placeholder = "Busque por u
 
   return (
     <div className="relative mx-4 mb-4">
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5 pointer-events-none" />
       <Input
         ref={inputRef}
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pl-10 pr-10 h-12 text-lg border-0 shadow-card focus-visible:shadow-floating transition-all duration-300"
+        className={`pl-10 ${value ? 'pr-20' : 'pr-10'} h-12 text-lg border-0 shadow-card focus-visible:shadow-floating transition-all duration-300`}
         aria-label="Campo de busca de produtos"
       />
       {value && (
@@ -37,9 +37,9 @@ export default function SearchBar({ value, onChange, placeholder = "Busque por u
           type="button"
           onClick={clearSearch}
           aria-label="Limpar busca"
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded focus:outline-none focus:ring-2 focus:ring-ring"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
       )}
     </div>
