@@ -1,7 +1,7 @@
 // Arquivo: OrderHistory.tsx
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Clock, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -31,8 +31,9 @@ export default function OrderHistory() {
       case 'canceled':
         return 'bg-destructive text-destructive-foreground';
       case 'pending':
+        return 'bg-restaurant-orange text-white';
       default:
-        return 'bg-muted text-muted-foreground';
+        return 'bg-restaurant-orange text-white';
     }
   };
 
@@ -40,20 +41,20 @@ export default function OrderHistory() {
   const getStatusText = (status: Order['status']) => {
     switch (status) {
       case 'pending':
-        return 'Aguardando confirmação';
+        return 'Em confirmação';
       case 'confirmed':
       case 'preparing':
         return 'Em preparação';
       case 'on_route':
-        return 'Em rota de entrega';
+        return 'A caminho';
       case 'ready':
         return 'Pronto para retirar';
       case 'delivered':
-        return 'Concluído';
+        return 'Entregue';
       case 'canceled':
         return 'Cancelado';
       default:
-        return 'Aguardando confirmação';
+        return 'Em confirmação';
     }
   };
 
@@ -93,6 +94,21 @@ export default function OrderHistory() {
     );
   }
 
+  // Restaura a posição de scroll ao voltar dos detalhes
+  useEffect(() => {
+    const shouldRestore = sessionStorage.getItem('orderHistoryRestore');
+    if (shouldRestore === '1') {
+      const y = parseInt(sessionStorage.getItem('orderHistoryScrollY') || '0', 10);
+      // Limpa a flag antes de rolar para evitar loops
+      sessionStorage.removeItem('orderHistoryRestore');
+      sessionStorage.removeItem('orderHistoryScrollY');
+      // Aguarda render antes de rolar
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: isNaN(y) ? 0 : y, behavior: 'auto' });
+      });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -115,19 +131,29 @@ export default function OrderHistory() {
           <Card 
             key={order.id} 
             className="p-4 shadow-card cursor-pointer hover:shadow-product transition-all duration-300"
-            onClick={() => navigate(`/order-details/${order.id}`)}
+            onClick={() => {
+              try {
+                sessionStorage.setItem('orderHistoryRestore', '1');
+                sessionStorage.setItem('orderHistoryScrollY', String(window.scrollY));
+              } catch {}
+              navigate(`/order-details/${order.id}`);
+            }}
           >
+            {/* Status no topo para evitar quebra do texto */}
+            <div className="mb-2">
+              <Badge className={`${getStatusColor(order.status)} whitespace-nowrap`}>
+                {getStatusText(order.status)}
+              </Badge>
+            </div>
+
             <div className="flex items-start justify-between mb-3">
               <div>
                 <h3 className="font-semibold text-foreground">Pedido {order.id}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {formatDate(order.date)}
+                  {formatDate(order.statusUpdatedAt || order.date)}
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge className={getStatusColor(order.status)}>
-                  {getStatusText(order.status)}
-                </Badge>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>

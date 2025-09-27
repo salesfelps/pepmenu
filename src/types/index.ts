@@ -23,7 +23,8 @@ export interface Category {
 
 export interface Order {
   id: string;
-  date: string;
+  date: string; // data de criação do pedido
+  statusUpdatedAt?: string; // horário do último status definido
   total: number;
   status: 'pending' | 'confirmed' | 'preparing' | 'on_route' | 'ready' | 'delivered' | 'canceled';
   items: CartItem[];

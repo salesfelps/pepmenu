@@ -20,6 +20,11 @@ export default function OrderConfirmation() {
     setOrder(foundOrder);
   }, [state.orders, orderId]);
 
+  // Foca no topo ao entrar na tela de sucesso
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
 // Função/Classe: handleSendWhatsApp — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
   const handleSendWhatsApp = () => {
     if (!order) return;
@@ -102,15 +107,15 @@ export default function OrderConfirmation() {
           </div>
 
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Status:</span>
-              <span className="font-medium text-restaurant-orange capitalize ml-1">
-                {order.status === 'pending' ? 'Aguardando confirmação' :
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">Status</span>
+              <span className="font-medium text-restaurant-orange capitalize">
+                {order.status === 'pending' ? 'Em confirmação' :
                  order.status === 'confirmed' ? 'Em preparação' :
                  order.status === 'preparing' ? 'Em preparação' :
-                 order.status === 'on_route' ? 'Em rota de entrega' :
+                 order.status === 'on_route' ? 'A caminho' :
                  order.status === 'ready' ? 'Pronto para retirar' :
-                 order.status === 'delivered' ? 'Concluído' :
+                 order.status === 'delivered' ? 'Entregue' :
                  order.status === 'canceled' ? 'Cancelado' : order.status}
               </span>
             </div>

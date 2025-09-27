@@ -2,6 +2,7 @@
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
 import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { ArrowLeft, MessageCircle, RefreshCw } from 'lucide-react';
 import { useApp, useCart } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,11 @@ export default function OrderDetails() {
   const { clearCart, addToCart } = useCart();
   
   const order = state.orders.find(o => o.id === orderId);
+
+  // Foca no topo ao entrar na tela de detalhes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
 // Função/Classe: getStatusColor — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
   const getStatusColor = (status: string) => {
@@ -34,6 +40,7 @@ export default function OrderDetails() {
       case 'canceled':
         return 'bg-destructive text-destructive-foreground';
       case 'pending':
+        return 'bg-restaurant-orange text-white';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -43,20 +50,20 @@ export default function OrderDetails() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'Aguardando confirmação';
+        return 'Em confirmação';
       case 'confirmed':
       case 'preparing':
         return 'Em preparação';
       case 'on_route':
-        return 'Em rota de entrega';
+        return 'A caminho';
       case 'ready':
         return 'Pronto para retirar';
       case 'delivered':
-        return 'Concluído';
+        return 'Entregue';
       case 'canceled':
         return 'Cancelado';
       default:
-        return 'Aguardando confirmação';
+        return 'Em confirmação';
     }
   };
 
@@ -127,12 +134,12 @@ export default function OrderDetails() {
           <div className="text-center mb-4">
             <h2 className="text-lg font-semibold">Pedido {order.id}</h2>
             <p className="text-sm text-muted-foreground">
-              {formatDate(order.date)}
+              {formatDate(order.statusUpdatedAt || order.date)}
             </p>
           </div>
 
           <div className="flex justify-center mb-4">
-            <Badge className={`${getStatusColor(order.status)} text-lg px-4 py-2`}>
+            <Badge className={`${getStatusColor(order.status)} whitespace-nowrap pointer-events-none select-none cursor-default text-sm sm:text-base px-3 py-1.5`}>
               {getStatusText(order.status)}
             </Badge>
           </div>

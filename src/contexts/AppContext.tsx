@@ -26,7 +26,8 @@ type AppAction =
   | { type: 'SET_PAYMENT'; payload: PaymentInfo }
   | { type: 'APPLY_COUPON'; payload: Coupon }
   | { type: 'REMOVE_COUPON' }
-  | { type: 'ADD_ORDER'; payload: Order };
+  | { type: 'ADD_ORDER'; payload: Order }
+  | { type: 'UPDATE_ORDER_STATUS'; payload: { id: string; status: Order['status']; at?: string } };
 
 const initialState: AppState = {
   cart: [],
@@ -116,6 +117,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
         payment: undefined,
         appliedCoupon: undefined
       };
+
+    case 'UPDATE_ORDER_STATUS': {
+      const at = action.payload.at || new Date().toISOString();
+      return {
+        ...state,
+        orders: state.orders.map(o =>
+          o.id === action.payload.id
+            ? { ...o, status: action.payload.status, statusUpdatedAt: at }
+            : o
+        ),
+      };
+    }
     
     default:
       return state;

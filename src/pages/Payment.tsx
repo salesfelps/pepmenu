@@ -1,7 +1,7 @@
 // Arquivo: Payment.tsx
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, CreditCard, Smartphone, Banknote, UtensilsCrossed } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart, useApp } from '@/contexts/AppContext';
@@ -24,6 +24,11 @@ export default function Payment() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const { total } = getCartTotal();
+
+  // Foca no topo ao entrar na tela de pagamento
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const paymentOptions = [
     {
@@ -104,9 +109,11 @@ export default function Payment() {
 
       // Create order
       const orderId = generateOrderCode();
+      const nowIso = new Date().toISOString();
       const order = {
         id: orderId,
-        date: new Date().toISOString(),
+        date: nowIso,
+        statusUpdatedAt: nowIso,
         total,
         status: 'pending' as const,
         items: cart,

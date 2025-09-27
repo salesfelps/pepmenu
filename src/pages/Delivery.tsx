@@ -40,31 +40,64 @@ export default function Delivery() {
   const [reference, setReference] = useState('');
 
   // Prefill address fields from persisted address string if available (once)
-  // Expects format like: "Rua, Nº - Complemento - Bairro, Cidade - UF (Ref.: xyz)"
+  // Robust parse to avoid mixing Bairro/Cidade with Complemento
   useEffect(() => {
     if (!state.delivery?.address) return;
     if (street || neighborhood || number) return; // avoid overriding user input
 
-    const addr = state.delivery.address;
+    let src = state.delivery.address.trim();
     try {
-      const refMatch = addr.match(/\(Ref\.:\s*(.*?)\)\s*$/);
-      const refText = refMatch ? refMatch[1] : '';
-      const withoutRef = addr.replace(/\s*\(Ref\.:.*?\)\s*$/, '');
-      const firstSplit = withoutRef.split(' - '); // ["Rua, Nº", "Complemento", "Bairro, Cidade - UF"]
-      const streetAndNum = firstSplit[0] || '';
-      const comp = firstSplit.length === 3 ? firstSplit[1] : '';
-      const tail = firstSplit[firstSplit.length - 1] || '';
+      // Extract reference (optional)
+      let refText = '';
+      const refMatch = src.match(/\(Ref\.:\s*(.*?)\)\s*$/);
+      if (refMatch) {
+        refText = refMatch[1];
+        src = src.slice(0, refMatch.index).trim();
+      }
 
-      const [streetPart, numPart] = streetAndNum.split(',').map(s => s.trim());
-      const [bairroPart, cityUfPart] = tail.split(',').map(s => s.trim());
-      const [cityPart, ufPart] = (cityUfPart || '').split('-').map(s => s.trim());
+      // Extract UF at the end: " - UF"
+      let ufPart = '';
+      const ufMatch = src.match(/\s-\s([A-Za-z]{2})$/);
+      if (ufMatch) {
+        ufPart = ufMatch[1];
+        src = src.slice(0, ufMatch.index).trim();
+      }
 
+      // Split city from the rest by the last comma
+      const lastComma = src.lastIndexOf(',');
+      if (lastComma === -1) return;
+      const cityPart = src.slice(lastComma + 1).trim();
+      const leftBeforeCity = src.slice(0, lastComma).trim(); // "... - Bairro"
+
+      // Find the delimiter for neighborhood: the last " - " before the city
+      const delimNeighborhood = leftBeforeCity.lastIndexOf(' - ');
+      if (delimNeighborhood === -1) return;
+      const neighborhoodPart = leftBeforeCity.slice(delimNeighborhood + 3).trim();
+      const leftPart = leftBeforeCity.slice(0, delimNeighborhood).trim(); // "Rua, Nº" ou "Rua, Nº - Complemento"
+
+      // Separate street, number and optional complement
+      const firstComma = leftPart.indexOf(',');
+      if (firstComma === -1) return;
+      const streetPart = leftPart.slice(0, firstComma).trim();
+      const numberAndComp = leftPart.slice(firstComma + 1).trim();
+
+      let numberPart = '';
+      let complementPart = '';
+      const compSepIdx = numberAndComp.indexOf(' - ');
+      if (compSepIdx !== -1) {
+        numberPart = numberAndComp.slice(0, compSepIdx).trim();
+        complementPart = numberAndComp.slice(compSepIdx + 3).trim();
+      } else {
+        numberPart = numberAndComp.trim();
+      }
+
+      // Assign values
       if (streetPart) setStreet(streetPart);
-      if (numPart) setNumber(numPart.replace(/\D/g, ''));
-      if (comp) setComplement(comp);
-      if (bairroPart) setNeighborhood(bairroPart);
+      if (numberPart) setNumber(numberPart.replace(/\D/g, ''));
+      if (neighborhoodPart) setNeighborhood(neighborhoodPart);
       if (cityPart) setCity(cityPart);
       if (ufPart) setStateUF(ufPart);
+      setComplement(complementPart); // manter vazio se não houver
       if (refText) setReference(refText);
       setShowAddressFields(true);
       setAddressMode('manual');
@@ -136,8 +169,11 @@ export default function Delivery() {
     });
 
     // Save delivery info
+    // Evita duplicação de UF quando usuário digita "Cidade - UF" no campo Cidade
+    const cityClean = city.replace(new RegExp(`\\s*-\\s*${stateUF}$`, 'i'), '').trim();
+
     const fullAddress = deliveryType === 'delivery'
-      ? `${street}, ${number}${complement ? ' - ' + complement : ''} - ${neighborhood}, ${city} - ${stateUF}${reference ? ` (Ref.: ${reference})` : ''}`
+      ? `${street}, ${number}${complement ? ' - ' + complement : ''} - ${neighborhood}, ${cityClean} - ${stateUF}${reference ? ` (Ref.: ${reference})` : ''}`
       : undefined;
 
     dispatch({
@@ -182,6 +218,8 @@ export default function Delivery() {
       setStreet(data.logradouro || '');
       setNeighborhood(data.bairro || '');
       setCity(data.localidade || '');
+      // Limpa complemento ao buscar por CEP para evitar preenchimento indevido
+      setComplement('');
       // Estado fixo em SP conforme requisito atual
       setStateUF('SP');
       setShowAddressFields(true);
@@ -563,6 +601,8 @@ export default function Delivery() {
                       e.currentTarget.blur();
                       setAddressMode('cep');
                       setCepError('');
+                      // Limpa complemento ao alternar para busca por CEP
+                      setComplement('');
                       setShowAddressFields(false);
                     }}
                   >
