@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { products } from '@/data/mockData';
+import { appConfig } from '@/config/app';
 
 export default function OrderDetails() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -71,13 +72,43 @@ export default function OrderDetails() {
   const handleSendWhatsApp = () => {
     if (!order) return;
 
-    const restaurantPhone = '5511987654321';
+    const restaurantPhone = appConfig.whatsappPhone.startsWith('55') ? appConfig.whatsappPhone : `55${appConfig.whatsappPhone}`;
+    const statusText = getStatusText(order.status);
+
+    // Build contextual message with status for details page (different from finalization)
+    const entregaLinha = order.delivery.type === 'delivery'
+      ? `*Entrega:* À domicílio\n*Endereço:* ${order.delivery.address || '—'}`
+      : `*Entrega:* Retirada no local`;
+
+    const itensLinha = order.items
+      .map(item => `• ${item.quantity}x ${item.name}${item.observation ? ` (${item.observation})` : ''}`)
+      .join('\n');
+
+    const intro = (() => {
+      switch (order.status) {
+        case 'pending':
+          return 'Olá! Meu pedido está em confirmação.';
+        case 'confirmed':
+        case 'preparing':
+          return 'Olá! Meu pedido está em preparação.';
+        case 'on_route':
+          return 'Olá! Meu pedido está a caminho.';
+        case 'ready':
+          return 'Olá! Meu pedido está pronto para retirar?';
+        default:
+          return 'Olá! Gostaria de falar sobre meu pedido.';
+      }
+    })();
+
     const message = encodeURIComponent(
-      `Olá! Gostaria de saber o status do meu pedido.\n\n` +
+      `${intro}\n\n` +
       `*Pedido:* ${order.id}\n` +
+      `*Status atual:* ${statusText}\n` +
+      `*Total:* ${formatPrice(order.total)}\n` +
       `*Cliente:* ${order.customer.name}\n` +
-      `*Telefone:* ${order.customer.phone}\n\n` +
-      `Obrigado!`
+      `*Telefone:* ${order.customer.phone}\n` +
+      `${entregaLinha}\n\n` +
+      `*Itens:*\n${itensLinha}`
     );
 
     window.open(`https://wa.me/${restaurantPhone}?text=${message}`, '_blank');
@@ -227,9 +258,9 @@ export default function OrderDetails() {
 
         {/* Action Buttons */}
         <div className="space-y-3 pb-8">
-          {order.status === 'preparing' && (
+          {(order.status !== 'delivered' && order.status !== 'canceled') && (
             <Button
-              className="w-full h-12 bg-gradient-warm hover:shadow-floating transition-all duration-300"
+              className="w-full h-12 bg-gradient-warm hover:shadow-floating transition-all duração-300"
               onClick={handleSendWhatsApp}
             >
               <MessageCircle className="w-5 h-5 mr-2" />

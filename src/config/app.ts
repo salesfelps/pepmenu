@@ -8,6 +8,8 @@ export const getAppConfig = (): AppConfig => {
   return {
     title: import.meta.env.VITE_APP_TITLE || "PepMenu - Cardápio Online",
     restaurantName: import.meta.env.VITE_RESTAURANT_NAME || "Emburguer Fast",
+    deliveryFee: Number(import.meta.env.VITE_DELIVERY_FEE ?? 3),
+    whatsappPhone: (import.meta.env.VITE_WHATSAPP_PHONE || '11971994435').replace(/\D/g, ''),
   };
 };
 

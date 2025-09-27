@@ -24,6 +24,11 @@ export default function ProductCard({ product, onProductClick }: ProductCardProp
           <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
             {product.description}
           </p>
+          {product.addonsOptions && product.addonsOptions.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Adicionais disponíveis
+            </p>
+          )}
           <span className="text-primary font-bold mt-2 block">
             {formatPrice(product.price)}
           </span>

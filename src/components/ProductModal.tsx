@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Plus, Minus } from 'lucide-react';
-import { Product, CartItem } from '@/types';
+import { Product, CartItem, Addon } from '@/types';
 import { useCart } from '@/contexts/AppContext';
 import { Drawer, DrawerContent, DrawerFooter } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ interface ProductModalProps {
 export default function ProductModal({ product, isOpen, onClose, initialQuantity, initialObservation, confirmLabel, onConfirm }: ProductModalProps) {
   const [quantity, setQuantity] = useState(1);
   const [observation, setObservation] = useState('');
+  const [selectedAddons, setSelectedAddons] = useState<Addon[]>([]);
   const { addToCart } = useCart();
 
 // Função/Classe: handleAddToCart — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
@@ -39,6 +40,7 @@ export default function ProductModal({ product, isOpen, onClose, initialQuantity
         ...product,
         quantity,
         observation: obs,
+        selectedAddons,
       };
       addToCart(cartItem);
     }
@@ -55,6 +57,7 @@ export default function ProductModal({ product, isOpen, onClose, initialQuantity
     if (isOpen) {
       setQuantity(initialQuantity ?? 1);
       setObservation(initialObservation ?? '');
+      setSelectedAddons([]);
     }
   }, [isOpen, product, initialQuantity, initialObservation]);
 
@@ -65,7 +68,8 @@ export default function ProductModal({ product, isOpen, onClose, initialQuantity
     }
   };
 
-  const totalPrice = product ? product.price * quantity : 0;
+  const addonsTotal = selectedAddons.reduce((s, a) => s + a.price, 0);
+  const totalPrice = product ? (product.price + addonsTotal) * quantity : 0;
 
   if (!product) return null;
 
@@ -127,6 +131,38 @@ export default function ProductModal({ product, isOpen, onClose, initialQuantity
                 </Button>
               </div>
             </div>
+
+            {/* Adicionais configuráveis por produto (exemplo hamburgueres e bebidas) */}
+            {product.addonsOptions && product.addonsOptions.length > 0 && (
+              <div className="space-y-2">
+                <Label>Adicionais</Label>
+                <div className="space-y-1">
+                  {product.addonsOptions.map((opt) => {
+                    const checked = selectedAddons.some(a => a.name === opt.name && a.price === opt.price);
+                    return (
+                      <label key={`${opt.name}-${opt.price}`} className="flex items-center justify-between border rounded-md p-2">
+                        <div className="text-sm">
+                          <div className="font-medium">{opt.name}</div>
+                          <div className="text-muted-foreground">{formatPrice(opt.price)}</div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedAddons(prev => [...prev, opt]);
+                            } else {
+                              setSelectedAddons(prev => prev.filter(a => !(a.name === opt.name && a.price === opt.price)));
+                            }
+                          }}
+                          className="w-4 h-4"
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="observation">Observações</Label>

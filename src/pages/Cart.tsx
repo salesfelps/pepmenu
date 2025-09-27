@@ -29,7 +29,7 @@ export default function Cart() {
   // Estado para edição de item via Drawer
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  const { subtotal, discount, total } = getCartTotal();
+  const { subtotal, discount, deliveryFee, total } = getCartTotal();
 
   const hasDeliveryInfo = Boolean(state.customer && state.delivery && state.delivery.type);
 
@@ -161,6 +161,13 @@ export default function Cart() {
                 <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                   {item.description}
                 </p>
+                {item.selectedAddons && item.selectedAddons.length > 0 && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {item.selectedAddons.map((a, i) => (
+                      <div key={i}>+ {a.name} ({formatPrice(a.price)})</div>
+                    ))}
+                  </div>
+                )}
                 {item.observation && (
                   <p className="text-sm text-primary mt-1">
                     Obs: {item.observation}
@@ -193,7 +200,7 @@ export default function Cart() {
               {/* Coluna direita: preço no canto superior e imagem abaixo */}
               <div className="flex flex-col items-end gap-2 flex-shrink-0">
                 <span className="text-primary font-bold ml-2">
-                  {formatPrice(item.price * item.quantity)}
+                  {formatPrice((item.price + (item.selectedAddons || []).reduce((s,a)=>s+a.price,0)) * item.quantity)}
                 </span>
                 <img 
                   src={item.image} 
@@ -256,6 +263,13 @@ export default function Cart() {
                   Cupom{state.appliedCoupon.code ? ` (${state.appliedCoupon.code})` : ''}
                 </span>
                 <span className="text-success font-medium">-{formatPrice(discount)}</span>
+              </div>
+            )}
+
+            {state.delivery?.type === 'delivery' && state.delivery.address && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Taxa de entrega</span>
+                <span>{formatPrice(deliveryFee)}</span>
               </div>
             )}
             

@@ -33,11 +33,16 @@ const products: Product[] = [
     description: 'Pão artesanal, hambúrguer 180g, queijo, alface, tomate e molho especial',
     price: 24.90,
     image: hamburgerImg,
-    category: 'hamburguers'
+    category: 'hamburguers',
+    addonsOptions: [
+      { name: 'Bacon extra', price: 4.00 },
+      { name: 'Queijo cheddar', price: 3.50 },
+      { name: 'Hambúrguer extra', price: 9.90 },
+    ],
   },
   {
     id: '2',
-    name: 'Pizza Margherita',
+    name: 'Pizza Marguerita',
     description: 'Molho de tomate, mussarela, manjericão fresco e azeite extravirgem',
     price: 32.90,
     image: pizzaImg,
@@ -57,7 +62,11 @@ const products: Product[] = [
     description: 'Coca-Cola, Guaraná ou Fanta - gelado',
     price: 5.90,
     image: drinkImg,
-    category: 'bebidas'
+    category: 'bebidas',
+    addonsOptions: [
+      { name: 'Gelo extra', price: 0.50 },
+      { name: 'Limão', price: 0.50 },
+    ],
   },
   {
     id: '5',
@@ -65,7 +74,11 @@ const products: Product[] = [
     description: 'Pão brioche, hambúrguer 200g, bacon crocante, queijo cheddar e molho barbecue',
     price: 28.90,
     image: hamburgerImg,
-    category: 'hamburguers'
+    category: 'hamburguers',
+    addonsOptions: [
+      { name: 'Bacon extra', price: 4.00 },
+      { name: 'Cheddar duplo', price: 4.00 },
+    ],
   },
   {
     id: '6',

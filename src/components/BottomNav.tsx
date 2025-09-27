@@ -43,12 +43,12 @@ export default function BottomNav() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-40 pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-center justify-around py-1">
+      <div className="flex items-center justify-around pt-1 pb-0">
         {navItems.map((item) => (
           <Button
             key={item.path}
             variant="ghost"
-            className={`flex flex-col gap-1 h-auto py-3 px-6 ${
+            className={`flex flex-col gap-1 h-auto py-3.5 px-6 ${
               item.active 
                 ? 'text-primary bg-primary/10' 
                 : 'text-muted-foreground hover:text-foreground'

@@ -8,6 +8,7 @@ import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatPrice, formatDate } from '@/lib/utils';
+import { appConfig } from '@/config/app';
 
 export default function OrderConfirmation() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -29,16 +30,61 @@ export default function OrderConfirmation() {
   const handleSendWhatsApp = () => {
     if (!order) return;
 
-    const restaurantPhone = '5511987654321'; // Replace with actual restaurant phone
+    const restaurantPhone = appConfig.whatsappPhone.startsWith('55') ? appConfig.whatsappPhone : `55${appConfig.whatsappPhone}`;
+
+    const statusText = (() => {
+      switch (order.status) {
+        case 'pending':
+          return 'Em confirmação';
+        case 'confirmed':
+        case 'preparing':
+          return 'Em preparação';
+        case 'on_route':
+          return 'A caminho';
+        case 'ready':
+          return 'Pronto para retirar';
+        case 'delivered':
+          return 'Entregue';
+        case 'canceled':
+          return 'Cancelado';
+        default:
+          return 'Em confirmação';
+      }
+    })();
+
+    const entregaLinha = order.delivery.type === 'delivery'
+      ? `*Entrega:* À domicílio\n*Endereço:* ${order.delivery.address || '—'}`
+      : `*Entrega:* Retirada no local`;
+
+    const itensLinha = order.items
+      .map(item => `• ${item.quantity}x ${item.name}${item.observation ? ` (${item.observation})` : ''}`)
+      .join('\n');
+
+    const intro = (() => {
+      switch (order.status) {
+        case 'pending':
+          return 'Olá! Fiz um pedido e ele está em confirmação.';
+        case 'confirmed':
+        case 'preparing':
+          return 'Olá! Fiz um pedido e ele está em preparação.';
+        case 'on_route':
+          return 'Olá! Fiz um pedido e ele está a caminho.';
+        case 'ready':
+          return 'Olá! Fiz um pedido e gostaria de confirmar a retirada.';
+        default:
+          return 'Olá! Fiz um pedido e gostaria de confirmar algumas informações.';
+      }
+    })();
+
     const message = encodeURIComponent(
-      `Olá! Fiz um pedido pelo cardápio online.\n\n` +
+      `${intro}\n\n` +
       `*Pedido:* ${order.id}\n` +
+      `*Status atual:* ${statusText}\n` +
       `*Total:* ${formatPrice(order.total)}\n` +
       `*Cliente:* ${order.customer.name}\n` +
       `*Telefone:* ${order.customer.phone}\n` +
-      `${order.delivery.type === 'delivery' ? `*Endereço:* ${order.delivery.address}` : '*Retirada no local*'}\n\n` +
-      `*Itens:*\n${order.items.map(item => `• ${item.quantity}x ${item.name}${item.observation ? ` (${item.observation})` : ''}`).join('\n')}\n\n` +
-      `Obrigado!`
+      `${entregaLinha}\n\n` +
+      `*Itens:*\n${itensLinha}`
     );
 
     window.open(`https://wa.me/${restaurantPhone}?text=${message}`, '_blank');
@@ -107,9 +153,9 @@ export default function OrderConfirmation() {
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Status</span>
-              <span className="font-medium text-restaurant-orange capitalize">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Status:</span>
+              <span className="font-medium text-restaurant-orange">
                 {order.status === 'pending' ? 'Em confirmação' :
                  order.status === 'confirmed' ? 'Em preparação' :
                  order.status === 'preparing' ? 'Em preparação' :
@@ -149,20 +195,36 @@ export default function OrderConfirmation() {
           <h3 className="font-semibold mb-4">Itens do pedido</h3>
           <div className="space-y-3">
             {order.items.map((item, index) => (
-              <div key={`${item.id}-${index}`} className="flex justify-between">
-                <div className="flex-1">
-                  <p className="font-medium">{item.quantity}x {item.name}</p>
-                  {item.observation && (
-                    <p className="text-sm text-muted-foreground">
-                      Obs: {item.observation}
-                    </p>
-                  )}
+              <div key={`${item.id}-${index}`}>
+                <div className="flex justify-between">
+                  <div className="flex-1">
+                    <p className="font-medium">{item.quantity}x {item.name}</p>
+                    {item.selectedAddons && item.selectedAddons.length > 0 && (
+                      <div className="pl-4 text-xs text-muted-foreground">
+                        {item.selectedAddons.map((a,i)=>(
+                          <div key={i}>+ {a.name} ({formatPrice(a.price)})</div>
+                        ))}
+                      </div>
+                    )}
+                    {item.observation && (
+                      <p className="text-sm text-muted-foreground">
+                        Obs: {item.observation}
+                      </p>
+                    )}
+                  </div>
+                  <span className="font-medium">
+                    {formatPrice((item.price + (item.selectedAddons || []).reduce((s,a)=>s+a.price,0)) * item.quantity)}
+                  </span>
                 </div>
-                <span className="font-medium">
-                  {formatPrice(item.price * item.quantity)}
-                </span>
               </div>
             ))}
+
+            {order.delivery.type === 'delivery' && order.delivery.address && (
+              <div className="flex justify-between pt-2 border-t">
+                <span className="text-muted-foreground">Taxa de entrega</span>
+                <span className="font-medium">{formatPrice(appConfig.deliveryFee)}</span>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -189,13 +251,15 @@ export default function OrderConfirmation() {
 
         {/* Action Buttons */}
         <div className="space-y-3 pb-8">
-          <Button
-            className="w-full h-12 bg-gradient-warm hover:shadow-floating transition-all duration-300"
-            onClick={handleSendWhatsApp}
-          >
-            <MessageCircle className="w-5 h-5 mr-2" />
-            Enviar pedido via WhatsApp
-          </Button>
+          {(order.status !== 'delivered' && order.status !== 'canceled') && (
+            <Button
+              className="w-full h-12 bg-gradient-warm hover:shadow-floating transition-all duration-300"
+              onClick={handleSendWhatsApp}
+            >
+              <MessageCircle className="w-5 h-5 mr-2" />
+              Enviar pedido via WhatsApp
+            </Button>
+          )}
           
           <Button
             variant="outline"

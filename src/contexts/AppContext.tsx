@@ -2,7 +2,7 @@
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { CartItem, Order, CustomerInfo, DeliveryInfo, PaymentInfo, Coupon } from '@/types';
+import { CartItem, Order, CustomerInfo, DeliveryInfo, PaymentInfo, Coupon, Addon } from '@/types';
 import { mockOrders } from '@/data/mockData';
 
 interface AppState {
@@ -19,7 +19,7 @@ type AppAction =
   | { type: 'ADD_TO_CART'; payload: CartItem }
   | { type: 'REMOVE_FROM_CART'; payload: string }
   | { type: 'UPDATE_CART_QUANTITY'; payload: { id: string; quantity: number } }
-  | { type: 'UPDATE_CART_ITEM'; payload: { id: string; quantity: number; observation?: string } }
+  | { type: 'UPDATE_CART_ITEM'; payload: { id: string; quantity: number; observation?: string; selectedAddons?: Addon[] } }
   | { type: 'CLEAR_CART' }
   | { type: 'SET_CUSTOMER'; payload: CustomerInfo }
   | { type: 'SET_DELIVERY'; payload: DeliveryInfo }
@@ -52,8 +52,12 @@ function safeParse<T>(value: string | null): T | undefined {
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'ADD_TO_CART':
+      const addonsKey = (list?: Addon[]) => JSON.stringify((list || []).map(a => ({ name: a.name, price: a.price })).sort((a,b)=>a.name.localeCompare(b.name)));
+      const payloadAddonsKey = addonsKey(action.payload.selectedAddons);
       const existingItemIndex = state.cart.findIndex(item => 
-        item.id === action.payload.id && item.observation === action.payload.observation
+        item.id === action.payload.id &&
+        item.observation === action.payload.observation &&
+        addonsKey(item.selectedAddons) === payloadAddonsKey
       );
       
       if (existingItemIndex > -1) {
@@ -85,7 +89,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         cart: state.cart.map(item =>
           item.id === action.payload.id
-            ? { ...item, quantity: action.payload.quantity, observation: action.payload.observation }
+            ? { ...item, quantity: action.payload.quantity, observation: action.payload.observation, selectedAddons: action.payload.selectedAddons }
             : item
         ),
       };
@@ -196,8 +200,8 @@ export function useCart() {
   };
 
 // Função/Classe: updateCartItem — Atualiza quantidade e observação do item
-  const updateCartItem = (id: string, quantity: number, observation?: string) => {
-    dispatch({ type: 'UPDATE_CART_ITEM', payload: { id, quantity, observation } });
+  const updateCartItem = (id: string, quantity: number, observation?: string, selectedAddons?: Addon[]) => {
+    dispatch({ type: 'UPDATE_CART_ITEM', payload: { id, quantity, observation, selectedAddons } });
   };
   
 // Função/Classe: removeFromCart — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
@@ -220,13 +224,21 @@ export function useCart() {
   };
   
   const getCartTotal = () => {
-    const subtotal = state.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const subtotal = state.cart.reduce((total, item) => {
+      const addonsSum = (item.selectedAddons || []).reduce((s, a) => s + a.price, 0);
+      const line = (item.price + addonsSum) * item.quantity;
+      return total + line;
+    }, 0);
     const discount = state.appliedCoupon 
       ? state.appliedCoupon.type === 'percentage' 
         ? subtotal * (state.appliedCoupon.discount / 100)
         : state.appliedCoupon.discount
       : 0;
-    return { subtotal, discount, total: subtotal - discount };
+    // Taxa de entrega: aplica apenas quando há endereço de entrega (delivery)
+    const isDelivery = state.delivery?.type === 'delivery' && Boolean(state.delivery?.address);
+    const deliveryFee = isDelivery ? (Number(import.meta.env.VITE_DELIVERY_FEE ?? 3)) : 0;
+    const total = subtotal - discount + deliveryFee;
+    return { subtotal, discount, deliveryFee, total };
   };
   
   const getCartItemCount = () => {

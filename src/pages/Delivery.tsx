@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { formatPrice } from '@/lib/utils';
+import { appConfig } from '@/config/app';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 
@@ -33,11 +34,13 @@ export default function Delivery() {
   const [cep, setCep] = useState(state.delivery?.cep || '');
   const [street, setStreet] = useState('');
   const [number, setNumber] = useState('');
+
   const [neighborhood, setNeighborhood] = useState('');
   const [complement, setComplement] = useState('');
   const [city, setCity] = useState('Embu das Artes');
   const [stateUF, setStateUF] = useState('SP');
   const [reference, setReference] = useState('');
+
 
   // Prefill address fields from persisted address string if available (once)
   // Robust parse to avoid mixing Bairro/Cidade with Complemento
@@ -80,7 +83,6 @@ export default function Delivery() {
       if (firstComma === -1) return;
       const streetPart = leftPart.slice(0, firstComma).trim();
       const numberAndComp = leftPart.slice(firstComma + 1).trim();
-
       let numberPart = '';
       let complementPart = '';
       const compSepIdx = numberAndComp.indexOf(' - ');
@@ -94,10 +96,10 @@ export default function Delivery() {
       // Assign values
       if (streetPart) setStreet(streetPart);
       if (numberPart) setNumber(numberPart.replace(/\D/g, ''));
+      if (complementPart) setComplement(complementPart);
       if (neighborhoodPart) setNeighborhood(neighborhoodPart);
       if (cityPart) setCity(cityPart);
       if (ufPart) setStateUF(ufPart);
-      setComplement(complementPart); // manter vazio se não houver
       if (refText) setReference(refText);
       setShowAddressFields(true);
       setAddressMode('manual');
@@ -160,6 +162,8 @@ export default function Delivery() {
         });
         return;
       }
+
+
     }
 
     // Save customer info
@@ -339,11 +343,18 @@ export default function Delivery() {
             onValueChange={(value) => setDeliveryType(value as 'delivery' | 'pickup')}
             className="space-y-4"
           >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="delivery" id="delivery" />
-              <Label htmlFor="delivery" className="flex items-center gap-2 cursor-pointer">
-                Entrega à domicílio
-              </Label>
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="delivery" id="delivery" />
+                <Label htmlFor="delivery" className="flex items-center gap-2 cursor-pointer">
+                  Entrega à domicílio
+                </Label>
+              </div>
+              {deliveryType === 'delivery' && (
+                <p className="text-xs text-muted-foreground ml-8">
+                  Taxa de entrega: <span className="font-medium text-foreground">{formatPrice(appConfig.deliveryFee)}</span>
+                </p>
+              )}
             </div>
             
             <div className="flex items-center space-x-2">
@@ -353,6 +364,7 @@ export default function Delivery() {
               </Label>
             </div>
           </RadioGroup>
+
         </Card>
 
         {/* Delivery Address */}
@@ -441,8 +453,8 @@ export default function Delivery() {
                         }} 
                         placeholder="Nº *" 
                         onFocus={handlePlaceholderFocus} 
-                        onBlur={handlePlaceholderBlur} 
-                        className="mt-1 peer" 
+                        onBlur={handlePlaceholderBlur}
+                        className="mt-1 peer"
                       />
                       <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Nº</span>
                     </div>

@@ -23,7 +23,7 @@ export default function Payment() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentInfo['method'] | ''>('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { total } = getCartTotal();
+  const { subtotal, discount, deliveryFee, total } = getCartTotal();
 
   // Foca no topo ao entrar na tela de pagamento
   useEffect(() => {
@@ -187,11 +187,20 @@ export default function Payment() {
           
           <div className="space-y-2 mb-4">
             {cart.map((item, index) => (
-              <div key={`${item.id}-${index}`} className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {item.quantity}x {item.name}
-                </span>
-                <span>{formatPrice(item.price * item.quantity)}</span>
+              <div key={`${item.id}-${index}`} className="text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {item.quantity}x {item.name}
+                  </span>
+                  <span>{formatPrice((item.price + (item.selectedAddons || []).reduce((s,a)=>s+a.price,0)) * item.quantity)}</span>
+                </div>
+                {item.selectedAddons && item.selectedAddons.length > 0 && (
+                  <div className="pl-4 text-xs text-muted-foreground">
+                    {item.selectedAddons.map((a,i)=>(
+                      <div key={i}>+ {a.name} ({formatPrice(a.price)})</div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -199,10 +208,14 @@ export default function Payment() {
           {state.appliedCoupon && (
             <div className="flex justify-between text-sm text-success mb-2">
               <span>Desconto ({state.appliedCoupon.code})</span>
-              <span>-{formatPrice(state.appliedCoupon.type === 'percentage' 
-                ? total * (state.appliedCoupon.discount / 100) 
-                : state.appliedCoupon.discount
-              )}</span>
+              <span>-{formatPrice(discount)}</span>
+            </div>
+          )}
+
+          {state.delivery?.type === 'delivery' && state.delivery.address && (
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-muted-foreground">Taxa de entrega</span>
+              <span>{formatPrice(deliveryFee)}</span>
             </div>
           )}
 
