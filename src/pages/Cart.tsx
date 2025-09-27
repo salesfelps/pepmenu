@@ -144,7 +144,7 @@ export default function Cart() {
             <div className="flex items-stretch gap-4">
               {/* Coluna esquerda: título, descrição, observação e ações */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground line-clamp-1">
+                <h3 className="font-semibold text-foreground break-words">
                   {item.quantity}x {item.name}
                 </h3>
                 <p className="text-sm text-muted-foreground line-clamp-2 mt-1">

@@ -18,7 +18,7 @@ export default function ProductCard({ product, onProductClick }: ProductCardProp
     >
       <div className="flex items-center justify-between gap-4 p-4">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground text-base md:text-lg leading-tight line-clamp-1">
+          <h3 className="font-semibold text-foreground text-base md:text-lg leading-tight break-words">
             {product.name}
           </h3>
           <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
