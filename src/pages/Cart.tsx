@@ -39,19 +39,30 @@ export default function Cart() {
     
     // Simulate coupon validation
     setTimeout(() => {
-      if (couponCode.toLowerCase() === 'desconto10') {
+      const code = couponCode.trim().toLowerCase();
+
+      // Mock de cupons disponíveis (dev)
+      const coupons: Record<string, { discount: number; type: 'percentage' | 'fixed'; description: string }> = {
+        pep10: { discount: 10, type: 'percentage', description: '10% de desconto' },
+        pep5: { discount: 5, type: 'fixed', description: 'R$ 5,00 de desconto' },
+        desconto10: { discount: 10, type: 'percentage', description: '10% de desconto' },
+      };
+
+      const found = coupons[code];
+
+      if (found) {
         dispatch({ 
           type: 'APPLY_COUPON', 
           payload: { 
-            code: couponCode, 
-            discount: 10, 
-            type: 'percentage', 
+            code: code.toUpperCase(), 
+            discount: found.discount, 
+            type: found.type, 
             isValid: true 
           } 
         });
         toast({
           title: 'Cupom aplicado!',
-          description: '10% de desconto aplicado ao seu pedido.',
+          description: `${found.description} aplicado ao seu pedido.`,
         });
       } else {
         toast({
@@ -62,7 +73,7 @@ export default function Cart() {
       }
       setIsApplyingCoupon(false);
       setCouponCode('');
-    }, 1000);
+    }, 800);
   };
 
 // Função/Classe: handleRemoveCoupon — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
@@ -238,10 +249,12 @@ export default function Cart() {
               <span>{formatPrice(subtotal)}</span>
             </div>
             
-            {discount > 0 && (
-              <div className="flex justify-between text-success">
-                <span>Desconto</span>
-                <span>-{formatPrice(discount)}</span>
+            {state.appliedCoupon && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Cupom{state.appliedCoupon.code ? ` (${state.appliedCoupon.code})` : ''}
+                </span>
+                <span className="text-success font-medium">-{formatPrice(discount)}</span>
               </div>
             )}
             
