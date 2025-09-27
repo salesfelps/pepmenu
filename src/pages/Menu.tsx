@@ -165,7 +165,7 @@ export default function Menu() {
     if (searchTerm) {
       // Show search results
       return (
-        <div className="px-4 pb-0">
+        <div className="px-4 pb-0 mb-8">
           <h2 className="text-xl font-bold mb-4 text-foreground">
             Resultados da busca "{searchTerm}"
           </h2>
