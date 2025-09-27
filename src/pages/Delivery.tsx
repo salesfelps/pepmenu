@@ -22,6 +22,7 @@ export default function Delivery() {
   const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
   const [customerName, setCustomerName] = useState(state.customer?.name || '');
   const [customerPhone, setCustomerPhone] = useState(state.customer?.phone || '');
+  const [phoneError, setPhoneError] = useState('');
 
   // CEP / Endereço
   const [addressMode, setAddressMode] = useState<'cep' | 'manual'>('cep');
@@ -57,6 +58,18 @@ export default function Delivery() {
       toast({
         title: 'Dados obrigatórios',
         description: 'Por favor, preencha seu nome e telefone.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validação de DDD no telefone (mínimo 2 dígitos no início)
+    const phoneDigits = customerPhone.replace(/\D/g, '');
+    if (phoneDigits.length < 2) {
+      setPhoneError('Informe o DDD (2 dígitos).');
+      toast({
+        title: 'Telefone inválido',
+        description: 'Informe o DDD (2 dígitos) no telefone.',
         variant: 'destructive',
       });
       return;
@@ -179,7 +192,14 @@ export default function Delivery() {
                 type="text"
                 placeholder="Nome *"
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  // Permite apenas letras (com acentos) e espaços, colapsando múltiplos espaços
+                  const onlyLetters = raw.replace(/[^\p{L}\s]/gu, '').replace(/\s{2,}/g, ' ');
+                  setCustomerName(onlyLetters.slice(0, 40));
+                }}
+                maxLength={40}
+                autoComplete="name"
                 onFocus={handlePlaceholderFocus}
                 onBlur={handlePlaceholderBlur}
                 className="mt-1 peer"
@@ -191,14 +211,47 @@ export default function Delivery() {
               <Input
                 id="phone"
                 type="tel"
+                inputMode="numeric"
                 placeholder="Telefone *"
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  let formatted = '';
+                  if (digits.length <= 9) {
+                    // Não formata enquanto não tiver pelo menos 10 dígitos.
+                    formatted = digits;
+                  } else {
+                    const ddd = digits.slice(0, 2);
+                    const rest = digits.slice(2);
+                    if (rest.length >= 9) {
+                      // 11 dígitos no total: (DD) 9XXXX-XXXX
+                      formatted = `(${ddd}) ${rest.slice(0, 5)}-${rest.slice(5, 9)}`;
+                    } else {
+                      // 10 dígitos no total: (DD) XXXX-XXXX
+                      formatted = `(${ddd}) ${rest.slice(0, 4)}-${rest.slice(4, 8)}`;
+                    }
+                  }
+                  setCustomerPhone(formatted);
+                  // Não exibir/alterar erro durante digitação para não atrapalhar a edição
+                  if (phoneError) setPhoneError('');
+                }}
                 onFocus={handlePlaceholderFocus}
-                onBlur={handlePlaceholderBlur}
-                className="mt-1 peer"
+                onBlur={(e) => {
+                  handlePlaceholderBlur(e);
+                  const digits = e.currentTarget.value.replace(/\D/g, '');
+                  // Exige DDD somente na validação (blur ou continuar)
+                  if (digits.length > 0 && digits.length < 2) {
+                    setPhoneError('Informe o DDD (2 dígitos).');
+                  }
+                }}
+                aria-invalid={!!phoneError}
+                aria-describedby={phoneError ? 'phone-error' : undefined}
+                className={`mt-1 peer ${phoneError ? 'ring-2 ring-destructive focus-visible:ring-destructive' : ''}`}
               />
               <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Telefone</span>
+              {phoneError && (
+                <p id="phone-error" className="text-sm text-destructive mt-1">{phoneError}</p>
+              )}
             </div>
           </div>
         </Card>
@@ -283,34 +336,134 @@ export default function Delivery() {
                 <>
                   <div className="grid grid-cols-4 gap-3">
                     <div className="relative col-span-3">
-                      <Input id="street" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rua *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <Input 
+                        id="street"
+                        value={street}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          // Letras (com acentos), números, espaço e pontuações comuns de endereço
+                          const cleaned = raw
+                            .replace(/[^\p{L}\d\s\.,\-\/ºª']/gu, '')
+                            .replace(/\s{2,}/g, ' ')
+                            .replace(/^\s+/, '');
+                          setStreet(cleaned.slice(0, 80));
+                        }}
+                        maxLength={80}
+                        placeholder="Rua *"
+                        onFocus={handlePlaceholderFocus}
+                        onBlur={handlePlaceholderBlur}
+                        className="mt-1 peer"
+                      />
                       <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Rua</span>
                     </div>
                     <div className="relative col-span-1">
-                      <Input id="number" value={number} onChange={(e) => setNumber(e.target.value)} placeholder="Nº *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <Input 
+                        id="number" 
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={6}
+                        value={number} 
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
+                          setNumber(digits);
+                        }} 
+                        placeholder="Nº *" 
+                        onFocus={handlePlaceholderFocus} 
+                        onBlur={handlePlaceholderBlur} 
+                        className="mt-1 peer" 
+                      />
                       <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Nº</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="relative">
-                      <Input id="neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <Input 
+                        id="neighborhood" 
+                        value={neighborhood} 
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          // Letras, números, espaço, hífen, apóstrofo e ponto
+                          const cleaned = raw
+                            .replace(/[^\p{L}\d\s\-\.']/gu, '')
+                            .replace(/\s{2,}/g, ' ')
+                            .replace(/^\s+/, '');
+                          setNeighborhood(cleaned.slice(0, 60));
+                        }} 
+                        maxLength={60}
+                        placeholder="Bairro *" 
+                        onFocus={handlePlaceholderFocus} 
+                        onBlur={handlePlaceholderBlur} 
+                        className="mt-1 peer" 
+                      />
                       <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Bairro</span>
                     </div>
                     <div className="relative">
-                      <Input id="complement" value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Complemento" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <Input 
+                        id="complement" 
+                        value={complement} 
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          // Letras, números, espaço, #, /, ., vírgula, hífen, º, ª
+                          const cleaned = raw
+                            .replace(/[^\p{L}\d\s#\/\.,\-ºª]/gu, '')
+                            .replace(/\s{2,}/g, ' ')
+                            .replace(/^\s+/, '');
+                          setComplement(cleaned.slice(0, 30));
+                        }} 
+                        maxLength={30}
+                        placeholder="Complemento" 
+                        onFocus={handlePlaceholderFocus} 
+                        onBlur={handlePlaceholderBlur} 
+                        className="mt-1 peer" 
+                      />
                       <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Complemento</span>
                       <p className="text-xs text-muted-foreground mt-1">Exemplo: Apto/Bloco/Casa</p>
                     </div>
                     <div className="relative">
-                      <Input id="reference" value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Ponto de referência" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <Input 
+                        id="reference" 
+                        value={reference} 
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          // Letras, números, espaço e pontuações comuns
+                          const cleaned = raw
+                            .replace(/[^\p{L}\d\s#\/\.,\-ºª()']/gu, '')
+                            .replace(/\s{2,}/g, ' ')
+                            .replace(/^\s+/, '');
+                          setReference(cleaned.slice(0, 60));
+                        }} 
+                        maxLength={60}
+                        placeholder="Ponto de referência" 
+                        onFocus={handlePlaceholderFocus} 
+                        onBlur={handlePlaceholderBlur} 
+                        className="mt-1 peer" 
+                      />
                       <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Ponto de referência</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-4 gap-3">
                     <div className="relative col-span-3">
-                      <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade *" onFocus={handlePlaceholderFocus} onBlur={handlePlaceholderBlur} className="mt-1 peer" />
+                      <Input 
+                        id="city" 
+                        value={city} 
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          // Apenas letras, espaços, hífen e apóstrofo
+                          const cleaned = raw
+                            .replace(/[^\p{L}\s\-']/gu, '')
+                            .replace(/\s{2,}/g, ' ')
+                            .replace(/^\s+/, '');
+                          setCity(cleaned.slice(0, 40));
+                        }} 
+                        maxLength={40}
+                        placeholder="Cidade *" 
+                        onFocus={handlePlaceholderFocus} 
+                        onBlur={handlePlaceholderBlur} 
+                        className="mt-1 peer" 
+                      />
                       <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground transition-opacity peer-placeholder-shown:opacity-0 peer-focus:opacity-100">Cidade</span>
                     </div>
                     <div className="relative col-span-1">
