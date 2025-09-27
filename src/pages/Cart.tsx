@@ -2,7 +2,7 @@
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Tag, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Tag, Plus, ShoppingBag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart, useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -105,7 +105,7 @@ export default function Cart() {
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <div className="text-center">
             <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4 mx-auto">
-              <Trash2 className="w-10 h-10 text-muted-foreground" />
+              <ShoppingBag className="w-10 h-10 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold mb-2">Carrinho vazio</h2>
             <p className="text-muted-foreground mb-6">Adicione produtos para continuar</p>

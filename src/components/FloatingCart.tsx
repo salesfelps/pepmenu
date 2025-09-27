@@ -25,9 +25,9 @@ export default function FloatingCart() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <ShoppingBag className="w-5 h-5" />
-              <div className="absolute -top-2 -right-2 bg-accent text-accent-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+              <span className="absolute -top-2 -right-2 text-xs font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.7)]">
                 {itemCount}
-              </div>
+              </span>
             </div>
             <span>Fechar pedido</span>
           </div>
