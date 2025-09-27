@@ -19,6 +19,7 @@ export default function Payment() {
   const { getCartTotal, cart } = useCart();
   const { state, dispatch } = useApp();
   
+  const hasDeliveryInfo = Boolean(state.customer && state.delivery && state.delivery.type);
   const [paymentMethod, setPaymentMethod] = useState<PaymentInfo['method'] | ''>('');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -129,7 +130,7 @@ export default function Payment() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/checkout/delivery')}
+            onClick={() => navigate(hasDeliveryInfo ? '/cart' : '/checkout/delivery')}
             className="mr-3"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -210,25 +211,25 @@ export default function Payment() {
         <Card className="p-4 shadow-card bg-food-bg">
           <h3 className="font-semibold mb-3">Dados da entrega</h3>
           
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2 text-sm break-words">
             <div>
               <span className="text-muted-foreground">Cliente: </span>
-              <span>{state.customer?.name}</span>
+              <span className="break-words">{state.customer?.name}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Telefone: </span>
-              <span>{state.customer?.phone}</span>
+              <span className="break-words">{state.customer?.phone}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Entrega: </span>
-              <span>
+              <span className="break-words">
                 {state.delivery?.type === 'delivery' ? 'À domicílio' : 'Retirada no local'}
               </span>
             </div>
             {state.delivery?.address && (
               <div>
                 <span className="text-muted-foreground">Endereço: </span>
-                <span>{state.delivery.address}</span>
+                <span className="block break-words whitespace-normal">{state.delivery.address}</span>
               </div>
             )}
           </div>

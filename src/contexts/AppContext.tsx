@@ -1,7 +1,7 @@
 // Arquivo: AppContext.tsx
 // Comentário: Este arquivo contém lógica principal/auxiliar deste módulo. Comentários curtos foram adicionados para facilitar a leitura.
 
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { CartItem, Order, CustomerInfo, DeliveryInfo, PaymentInfo, Coupon } from '@/types';
 import { mockOrders } from '@/data/mockData';
 
@@ -32,6 +32,20 @@ const initialState: AppState = {
   cart: [],
   orders: mockOrders,
 };
+
+const STORAGE_KEYS = {
+  customer: 'pepmenu_customer',
+  delivery: 'pepmenu_delivery',
+} as const; 
+
+function safeParse<T>(value: string | null): T | undefined {
+  if (!value) return undefined;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return undefined;
+  }
+}
 
 // Função/Classe: appReducer — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -98,8 +112,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state, 
         orders: [action.payload, ...state.orders],
         cart: [],
-        customer: undefined,
-        delivery: undefined,
+        // Mantemos customer e delivery para próximos pedidos
         payment: undefined,
         appliedCoupon: undefined
       };
@@ -116,7 +129,33 @@ const AppContext = createContext<{
 
 // Função/Classe: AppProvider — Responsável por uma parte específica da lógica. Mantenha entradas bem definidas.
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(appReducer, initialState);
+  const [state, dispatch] = useReducer(
+    appReducer,
+    undefined as unknown as AppState,
+    () => {
+      const persistedCustomer = safeParse<CustomerInfo>(typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.customer) : null);
+      const persistedDelivery = safeParse<DeliveryInfo>(typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.delivery) : null);
+      return {
+        ...initialState,
+        customer: persistedCustomer || initialState.customer,
+        delivery: persistedDelivery || initialState.delivery,
+      } as AppState;
+    }
+  );
+
+  // Persist customer when present
+  useEffect(() => {
+    if (state.customer) {
+      try { localStorage.setItem(STORAGE_KEYS.customer, JSON.stringify(state.customer)); } catch {}
+    }
+  }, [state.customer]);
+
+  // Persist delivery when present (não limpamos storage quando for undefined)
+  useEffect(() => {
+    if (state.delivery) {
+      try { localStorage.setItem(STORAGE_KEYS.delivery, JSON.stringify(state.delivery)); } catch {}
+    }
+  }, [state.delivery]);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

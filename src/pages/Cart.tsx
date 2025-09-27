@@ -219,13 +219,13 @@ export default function Cart() {
         {hasDeliveryInfo && (
           <Card className="p-4 shadow-card">
             <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1 text-sm">
-                <h3 className="font-semibold text-foreground text-base">Informações de contato e entrega</h3>
+              <div className="space-y-1 text-sm break-words min-w-0 flex-1">
+                <h3 className="font-semibold text-foreground text-base">Informações de contato</h3>
                 {state.customer && (
-                  <p className="text-muted-foreground">{state.customer.name} • {state.customer.phone}</p>
+                  <p className="text-muted-foreground break-words whitespace-normal">{state.customer.name} • {state.customer.phone}</p>
                 )}
                 {state.delivery && (
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground break-words whitespace-normal">
                     {state.delivery.type === 'delivery' ? (state.delivery.address || 'Endereço não informado') : 'Retirada no local'}
                   </p>
                 )}
@@ -233,6 +233,7 @@ export default function Cart() {
               <Button
                 variant="outline"
                 size="sm"
+                className="flex-shrink-0"
                 onClick={() => navigate('/checkout/delivery')}
               >
                 Editar

@@ -1,7 +1,7 @@
 // Arquivo: Delivery.tsx
 // Comentário: Fluxo de endereço revisado. Placeholders somem ao focar; botão alterna entre "Não sei meu CEP" e "Pesquisar por CEP".
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, User, MapPin, Search, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart, useApp } from '@/contexts/AppContext';
@@ -19,7 +19,7 @@ export default function Delivery() {
   const { getCartTotal } = useCart();
   const { state, dispatch } = useApp();
   
-  const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
+  const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>(state.delivery?.type || 'delivery');
   const [customerName, setCustomerName] = useState(state.customer?.name || '');
   const [customerPhone, setCustomerPhone] = useState(state.customer?.phone || '');
   const [phoneError, setPhoneError] = useState('');
@@ -38,6 +38,39 @@ export default function Delivery() {
   const [city, setCity] = useState('Embu das Artes');
   const [stateUF, setStateUF] = useState('SP');
   const [reference, setReference] = useState('');
+
+  // Prefill address fields from persisted address string if available (once)
+  // Expects format like: "Rua, Nº - Complemento - Bairro, Cidade - UF (Ref.: xyz)"
+  useEffect(() => {
+    if (!state.delivery?.address) return;
+    if (street || neighborhood || number) return; // avoid overriding user input
+
+    const addr = state.delivery.address;
+    try {
+      const refMatch = addr.match(/\(Ref\.:\s*(.*?)\)\s*$/);
+      const refText = refMatch ? refMatch[1] : '';
+      const withoutRef = addr.replace(/\s*\(Ref\.:.*?\)\s*$/, '');
+      const firstSplit = withoutRef.split(' - '); // ["Rua, Nº", "Complemento", "Bairro, Cidade - UF"]
+      const streetAndNum = firstSplit[0] || '';
+      const comp = firstSplit.length === 3 ? firstSplit[1] : '';
+      const tail = firstSplit[firstSplit.length - 1] || '';
+
+      const [streetPart, numPart] = streetAndNum.split(',').map(s => s.trim());
+      const [bairroPart, cityUfPart] = tail.split(',').map(s => s.trim());
+      const [cityPart, ufPart] = (cityUfPart || '').split('-').map(s => s.trim());
+
+      if (streetPart) setStreet(streetPart);
+      if (numPart) setNumber(numPart.replace(/\D/g, ''));
+      if (comp) setComplement(comp);
+      if (bairroPart) setNeighborhood(bairroPart);
+      if (cityPart) setCity(cityPart);
+      if (ufPart) setStateUF(ufPart);
+      if (refText) setReference(refText);
+      setShowAddressFields(true);
+      setAddressMode('manual');
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.delivery?.address]);
 
   const { total } = getCartTotal();
 
